@@ -177,7 +177,7 @@
            <item row="0" column="1">
             <widget class="QLineEdit" name="mu_input">
              <property name="text">
-              <string>1</string>
+              <string>1e0</string>
              </property>
             </widget>
            </item>
@@ -225,7 +225,7 @@
            <item row="3" column="1">
             <widget class="QLineEdit" name="width_input">
              <property name="text">
-              <string>0,25</string>
+              <string>250e-3</string>
              </property>
             </widget>
            </item>
@@ -246,7 +246,7 @@
            <item row="2" column="1">
             <widget class="QLineEdit" name="sigma_input">
              <property name="text">
-              <string>0,00</string>
+              <string>0</string>
              </property>
              <property name="maxLength">
               <number>100</number>
@@ -256,7 +256,7 @@
            <item row="1" column="1">
             <widget class="QLineEdit" name="epsilon_input">
              <property name="text">
-              <string>1</string>
+              <string>1e0</string>
              </property>
             </widget>
            </item>

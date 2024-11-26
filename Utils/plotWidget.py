@@ -56,9 +56,9 @@ class MplCanvas(FigureCanvas):
 
     def plot(self, x, y, ylims=None, xlims=None):
         self.axes.clear()
-
+        self.axes.plot(x, y)
         line = self.axes.plot(x, y)
-        self.dataCursor.append(mplcursors.cursor(line))
+        self.dataCursor = mplcursors.cursor(line)
 
         self.axes.set_xscale(self.XScale)
         self.axes.set_yscale(self.YScale)
@@ -77,12 +77,7 @@ class MplCanvas(FigureCanvas):
         else:
             xlims = self.axes.get_xlim()
             self.axes.set_xlim(xlims[0], xlims[1])
-        if self.leftPatch is not None:
-            self.axes.add_patch(self.leftPatch)
-        if self.rigthPatch is not None:
-            self.axes.add_patch(self.rigthPatch)
-        if self.middlePatch is not None:
-            self.axes.add_patch(self.middlePatch)
+
         self.fig.canvas.draw()
 
 

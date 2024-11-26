@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'UI/Main.ui'
+# Form implementation generated from reading ui file './UI/Main.ui'
 #
 # Created by: PyQt6 UI code generator 6.3.1
 #
@@ -196,17 +196,17 @@ class Ui_MainWindow(object):
         self.polarization_CB.setItemText(1, _translate("MainWindow", "TE"))
         self.polarization_label.setText(_translate("MainWindow", "Polarizacion"))
         self.layer_box.setTitle(_translate("MainWindow", "Añadir capa"))
-        self.mu_input.setText(_translate("MainWindow", "1"))
+        self.mu_input.setText(_translate("MainWindow", "1e0"))
         self.add_layer_button.setText(_translate("MainWindow", "Añadir"))
         self.sigma_label.setText(_translate("MainWindow", "σ"))
         self.mu_label.setText(_translate("MainWindow", "μr"))
         self.width_label.setText(_translate("MainWindow", "Espesor"))
         self.epsilon_label.setText(_translate("MainWindow", "εr"))
-        self.width_input.setText(_translate("MainWindow", "0,25"))
+        self.width_input.setText(_translate("MainWindow", "250e-3"))
         self.width_unit_CB.setItemText(0, _translate("MainWindow", "λs"))
         self.width_unit_CB.setItemText(1, _translate("MainWindow", "mm"))
-        self.sigma_input.setText(_translate("MainWindow", "0,00"))
-        self.epsilon_input.setText(_translate("MainWindow", "1"))
+        self.sigma_input.setText(_translate("MainWindow", "0"))
+        self.epsilon_input.setText(_translate("MainWindow", "1e0"))
         self.layer_name_input.setText(_translate("MainWindow", "Capa"))
         self.layer_name_label.setText(_translate("MainWindow", "Nombre"))
         self.layer_view_box.setTitle(_translate("MainWindow", "Visualizacion"))

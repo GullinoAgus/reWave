@@ -5,6 +5,7 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 from scipy import signal
 
 from UI.Main_UI import Ui_MainWindow
+from Utils.TLineNetworkClass import TLineNetwork
 from Utils.plotWidget import MplCanvas
 from Utils.MediumClass import Medium
 
@@ -39,7 +40,29 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def calculate(self):
         layers = []
         for layer in self.layer_list:
-            layers.append(LayerWidget.to_medium(layer))
+            if layer.isConnected():
+                layers.append(LayerWidget.to_medium(layer))
+        if self.period_input.value() > 1:
+            last_layer = layers.pop()
+            length = len(layers)
+            for i in range(self.period_input.value()):
+                layers.append(layers[1:length])
+            layers.append(last_layer)
+
+        net = TLineNetwork(layers, self.theta_i)
+        if self.freq_sweep_check.isChecked():
+            freqs = np.linspace(float(self.min_freq_input.value()*1e9), float(
+                self.max_freq_input.value()*1e9), 1000)
+            if self.polarization_CB.currentText() == "TM":
+                trans = [
+                    1 - np.abs(net.calc_total_reflection_coef_par(freq))**2 for freq in freqs]
+            else:
+                trans = [
+                    1 - np.abs(net.calc_total_reflection_coef_per(freq))**2 for freq in freqs]
+
+            self.apant_plot.plot(freqs, -10*np.log10(trans))
+            self.reflex_coef_output.setText(locale.str(1-trans[0]))
+            self.trans_coef_output.setText(locale.str(trans[0]))
 
     def add_layer(self):
         if len(self.layer_list) == 0:
@@ -88,6 +111,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def layer_name(self):
         return self.layer_name_input.text()
 
+    @property
+    def theta_i(self):
+        return locale.atof(self.incidence_input.text()) * np.pi / 180
+
     def layer_swap_handler(self, layer_num, direction):
         if (direction == -1 and layer_num == 0) or (direction == 1 and layer_num == len(self.layer_list) - 1):
             return
@@ -115,9 +142,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         auxlay.removeWidget(layer)
         layer.destroy(True, True)
         layer.deleteLater()
-        if layer_num == 0:
+        if layer_num == 0 and len(self.layer_list):
             self.layer_list[0].set_type("Incidencia")
-        elif layer_num == len(self.layer_list)-1:
+        elif layer_num == len(self.layer_list)-1 and len(self.layer_list):
             self.layer_list[-1].set_type("Transmision")
         for i in range(len(self.layer_list)):
             if i >= layer_index:
@@ -134,7 +161,6 @@ class LayerWidget(QtWidgets.QWidget):
         self.er = er
         self.sigma = sigma
         self.layer_width = width
-        self.width_unit = width_unit
         self.layer_num = layer_num
         self.name = name
         self.connected = True
@@ -169,7 +195,14 @@ class LayerWidget(QtWidgets.QWidget):
         self.boxlayout.addWidget(self.mu_input, 2, 1, 1, 1)
         self.sigma_label = QtWidgets.QLabel(self.infoViewBox)
         self.sigma_label.setMaximumSize(QtCore.QSize(16777215, 30))
-        self.sigma_label.setObjectName(μmidth_label, 5, 0, 1, 1)
+        self.sigma_label.setObjectName("sigma_label")
+        self.boxlayout.addWidget(self.sigma_label, 4, 0, 1, 1)
+        self.mu_label = QtWidgets.QLabel(self.infoViewBox)
+        self.mu_label.setObjectName("mu_label")
+        self.boxlayout.addWidget(self.mu_label, 2, 0, 1, 1)
+        self.width_label = QtWidgets.QLabel(self.infoViewBox)
+        self.width_label.setObjectName("width_label")
+        self.boxlayout.addWidget(self.width_label, 5, 0, 1, 1)
         self.epsilon_label = QtWidgets.QLabel(self.infoViewBox)
         self.epsilon_label.setObjectName("epsilon_label")
         self.boxlayout.addWidget(self.epsilon_label, 3, 0, 1, 1)
@@ -205,17 +238,17 @@ class LayerWidget(QtWidgets.QWidget):
         self.layer_type.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.boxlayout.addWidget(self.layer_type, 7, 0, 1, 3)
 
-        self.mu_input.setText(str(self.mur))
+        self.mu_input.setText(locale.str(self.mur))
         self.sigma_label.setText("σ")
         self.mu_label.setText("μr")
         self.width_label.setText("Espesor")
         self.epsilon_label.setText("εr")
-        self.width_input.setText(str(self.layer_width))
+        self.width_input.setText(locale.str(self.layer_width))
         self.width_unit_CB.setItemText(0, "λs")
         self.width_unit_CB.setItemText(1, "mm")
         self.width_unit_CB.setCurrentIndex(1 if width_unit == 'mm' else 0)
-        self.sigma_input.setText((str(self.sigma)))
-        self.epsilon_input.setText(str(self.er))
+        self.sigma_input.setText((locale.str(self.sigma)))
+        self.epsilon_input.setText(locale.str(self.er))
         self.layer_name_label.setText("Nombre")
         self.layer_name_input.setText(self.name)
         self.layer_type.setText(layer_type)
@@ -246,13 +279,13 @@ class LayerWidget(QtWidgets.QWidget):
             self.width_unit_CB.setVisible(True)
 
     def to_medium(self):
-        if self.width_unit == "mm":
-            med = Medium(mur=self.mu_value,
+        if self.width_unit_CB.currentText() == "mm":
+            med = Medium(ur=self.mu_value,
                          sigma=self.sigma_value,
                          er=self.epsilon_value,
-                         width=self.width_value)
+                         width=self.width_value * 1e-3)
         else:
-            med = Medium(mur=self.mu_value,
+            med = Medium(ur=self.mu_value,
                          sigma=self.sigma_value,
                          er=self.epsilon_value,
                          width_lambdas=self.width_value)
