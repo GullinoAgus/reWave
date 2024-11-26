@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>805</width>
+    <height>718</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="0">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="config_tab">
+       <attribute name="title">
+        <string>Configuracion</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="2" column="1">
+         <widget class="QGroupBox" name="sim_conf_box">
+          <property name="title">
+           <string>Sim Config</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="freq_sweep_check">
+             <property name="text">
+              <string>Barrido</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+             <property name="tristate">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QDoubleSpinBox" name="incidence_input">
+             <property name="font">
+              <font>
+               <kerning>true</kerning>
+              </font>
+             </property>
+             <property name="frame">
+              <bool>true</bool>
+             </property>
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::NoButtons</enum>
+             </property>
+             <property name="maximum">
+              <double>90.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="4">
+            <widget class="QDoubleSpinBox" name="max_freq_input">
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::NoButtons</enum>
+             </property>
+             <property name="minimum">
+              <double>0.100000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>10.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.500000000000000</double>
+             </property>
+             <property name="value">
+              <double>10.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="incidence_label">
+             <property name="text">
+              <string>Incidencia [º]</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="min_freq_label">
+             <property name="text">
+              <string>Frec Min [GHz]</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QDoubleSpinBox" name="min_freq_input">
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::NoButtons</enum>
+             </property>
+             <property name="correctionMode">
+              <enum>QAbstractSpinBox::CorrectToPreviousValue</enum>
+             </property>
+             <property name="minimum">
+              <double>0.100000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>10.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.500000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QLabel" name="max_freq_label">
+             <property name="text">
+              <string>Frec Max [GHz]</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="period_label">
+             <property name="text">
+              <string>Periodos de capas</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="2">
+            <widget class="QSpinBox" name="period_input">
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::NoButtons</enum>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="4">
+            <widget class="QComboBox" name="polarization_CB">
+             <item>
+              <property name="text">
+               <string>TM</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>TE</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="3" column="3">
+            <widget class="QLabel" name="polarization_label">
+             <property name="text">
+              <string>Polarizacion</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QGroupBox" name="layer_box">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>250</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>Añadir capa</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_4">
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="mu_input">
+             <property name="text">
+              <string>1</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0" colspan="3">
+            <widget class="QPushButton" name="add_layer_button">
+             <property name="text">
+              <string>Añadir</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="sigma_label">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>σ</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="mu_label">
+             <property name="text">
+              <string>μr</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="width_label">
+             <property name="text">
+              <string>Espesor</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="epsilon_label">
+             <property name="text">
+              <string>εr</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="width_input">
+             <property name="text">
+              <string>0,25</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="2">
+            <widget class="QComboBox" name="width_unit_CB">
+             <item>
+              <property name="text">
+               <string>λs</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>mm</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="sigma_input">
+             <property name="text">
+              <string>0,00</string>
+             </property>
+             <property name="maxLength">
+              <number>100</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="epsilon_input">
+             <property name="text">
+              <string>1</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="layer_name_input">
+             <property name="text">
+              <string>Capa</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="layer_name_label">
+             <property name="text">
+              <string>Nombre</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QGroupBox" name="layer_view_box">
+          <property name="title">
+           <string>Visualizacion</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QScrollArea" name="scrollArea">
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="layer_view_content">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>755</width>
+                <height>317</height>
+               </rect>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_2"/>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <widget class="QPushButton" name="pushButton">
+          <property name="text">
+           <string>Calcular</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="result_tab">
+       <attribute name="title">
+        <string>Resultados</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="result_layout">
+        <item>
+         <widget class="QGroupBox" name="results_box">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>100</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>Resultados</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="reflex_coef_label">
+             <property name="text">
+              <string>Coeficiente de reflexion</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="reflex_coef_output">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="trans_coef_label">
+             <property name="text">
+              <string>Coeficiente de transmision</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="trans_coef_output">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>freq_sweep_check</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>freq_sweep_clicked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>469</x>
+     <y>363</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>807</x>
+     <y>312</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>calculate()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>442</x>
+     <y>559</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>802</x>
+     <y>481</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>add_layer_button</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>add_layer()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>193</x>
+     <y>514</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1</x>
+     <y>526</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>freq_sweep_clicked(bool)</slot>
+  <slot>calculate()</slot>
+  <slot>add_layer()</slot>
+ </slots>
+</ui>
