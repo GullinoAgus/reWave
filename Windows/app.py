@@ -26,14 +26,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def freq_sweep_clicked(self, state):
         if state:
-            self.max_freq_input.setEnabled(True)
-            self.max_freq_label.setEnabled(True)
-            self.min_freq_label.setText("Frec Min [GHz]")
-
-        else:
+            self.polarization_CB.setDisabled(True)
+            self.polarization_label.setDisabled(True)
+            self.incidence_input.setDisabled(True)
+            self.incidence_label.setDisabled(True)
             self.max_freq_input.setDisabled(True)
             self.max_freq_label.setDisabled(True)
             self.min_freq_label.setText("Frec [GHz]")
+        else:
+            self.polarization_CB.setEnabled(True)
+            self.polarization_label.setEnabled(True)
+            self.incidence_input.setEnabled(True)
+            self.incidence_label.setEnabled(True)
+            self.max_freq_input.setEnabled(True)
+            self.max_freq_label.setEnabled(True)
+            self.min_freq_label.setText("Frec Min [GHz]")
 
     def calculate(self):
         layers = []
@@ -47,8 +54,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 layers.append(layers[1:length])
             layers.append(last_layer)
 
-        net = TLineNetwork(layers, self.theta_i)
         if self.freq_sweep_check.isChecked():
+            theta_i = np.linspace(0, np.pi/2, 1000)
+            freq = float(self.min_freq_input.value()*1e9)
+            gamma_par = []
+            gamma_per = []
+            for theta in theta_i:
+                net = TLineNetwork(layers, theta)
+                gamma_par.append(
+                    np.abs(net.calc_total_reflection_coef_par(freq)))
+                gamma_per.append(
+                    np.abs(net.calc_total_reflection_coef_per(freq)))
+            self.apant_plot.plot_gammas(theta_i, gamma_par, gamma_per)
+            self.results_box.hide()
+        else:
+            net = TLineNetwork(layers, self.theta_i)
             freqs = np.linspace(float(self.min_freq_input.value()*1e9), float(
                 self.max_freq_input.value()*1e9), 1000)
             if self.polarization_CB.currentText() == "TM":
@@ -58,9 +78,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 trans = [
                     1 - np.abs(net.calc_total_reflection_coef_per(freq))**2 for freq in freqs]
 
-            self.apant_plot.plot(freqs, -10*np.log10(trans))
+            self.apant_plot.plot_effeciency(freqs, -10*np.log10(trans))
             self.reflex_coef_output.setText(locale.str(1-trans[0]))
             self.trans_coef_output.setText(locale.str(trans[0]))
+            self.eval_freq_output.setText(
+                locale.str(self.min_freq_input.value()))
+            self.results_box.show()
+
+        self.tabWidget.setCurrentIndex(1)
 
     def add_layer(self):
         if len(self.layer_list) == 0:

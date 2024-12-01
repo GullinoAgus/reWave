@@ -27,49 +27,44 @@ class MplCanvas(FigureCanvas):
         self.fig.set_tight_layout(True)
         super().__init__(self.fig)
         self.navToolBar = NavigationToolbar(self, parent)
-        self.title = ""
-        self.XAxisTitle = ''
-        self.YAxisTitle = ''
-        self.XScale = 'log'
-        self.YScale = 'linear'
         parent.layout().addWidget(self.navToolBar)
         parent.layout().addWidget(self)
         self.cursor = Cursor(self.axes, useblit=True,
                              color='gray', linestyle='--', linewidth=0.8)
 
-    def changePlotTitle(self, title: str):
-        self.title = title
-
-    def changeXAxisTitle(self, title: str):
-        self.XAxisTitle = title
-
-    def changeYAxisTitle(self, title: str):
-        self.YAxisTitle = title
-
-    def changeXScales(self, xscale: str):
-        self.XScale = xscale
-        self.XScaleComboBox.setCurrentText(self.XScale)
-
-    def changeYScales(self, yscale: str):
-        self.YScale = yscale
-        self.YScaleComboBox.setCurrentText(self.YScale)
-
-    def plot(self, x, y, ylims=None, xlims=None):
+    def plot_effeciency(self, x, y, ylims=None, xlims=None):
         self.axes.clear()
-        self.axes.plot(x, y)
         line = self.axes.plot(x, y)
         self.dataCursor = mplcursors.cursor(line)
 
-        self.axes.set_xscale(self.XScale)
-        self.axes.set_yscale(self.YScale)
+        self.axes.set_xscale('log')
+        self.axes.set_yscale('linear')
+        self.axes.grid(which='both')
+        self.axes.set_xlabel('Frecuencia [GHz]')
+        self.axes.set_ylabel('Eficiencia de apantallamiento [dB]')
+        if hasattr(ylims, '__iter__'):
+            self.axes.set_ylim(ylims[0], ylims[1])
+        if hasattr(xlims, '__iter__'):
+            self.axes.set_xlim(xlims[0], xlims[1])
+        else:
+            xlims = self.axes.get_xlim()
+            self.axes.set_xlim(xlims[0], xlims[1])
+
+        self.fig.canvas.draw()
+
+    def plot_gammas(self, x, y1, y2, ylims=None, xlims=None):
+        self.axes.clear()
+        line1 = self.axes.plot(
+            x*180/np.pi, y1, label="$|\Gamma_{{\parallel}}|$")
+        line2 = self.axes.plot(x*180/np.pi, y2, label="$|\Gamma_{{\perp}}|$")
+        self.dataCursor = [mplcursors.cursor(line1), mplcursors.cursor(line2)]
+
+        self.axes.set_xscale('linear')
+        self.axes.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes.legend()
-        self.axes.set_title(
-            self.title, size=rcParams['font.size'], fontfamily=rcParams['font.family'])
-        self.axes.set_xlabel(
-            self.XAxisTitle, size=rcParams['font.size'], fontfamily=rcParams['font.family'])
-        self.axes.set_ylabel(
-            self.YAxisTitle, size=rcParams['font.size'], fontfamily=rcParams['font.family'])
+        self.axes.set_xlabel('Angulo de incidencia [$\degree$]')
+        self.axes.set_ylabel('$|\Gamma|$')
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
         if hasattr(xlims, '__iter__'):
