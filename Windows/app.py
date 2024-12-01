@@ -1,8 +1,6 @@
 import locale
-from colour import Color
 import numpy as np
 from PyQt6 import QtWidgets, QtGui, QtCore
-from scipy import signal
 
 from UI.Main_UI import Ui_MainWindow
 from Utils.TLineNetworkClass import TLineNetwork
@@ -144,7 +142,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         layer.deleteLater()
         if layer_num == 0 and len(self.layer_list):
             self.layer_list[0].set_type("Incidencia")
-        elif layer_num == len(self.layer_list)-1 and len(self.layer_list):
+        elif layer_num == len(self.layer_list) and len(self.layer_list):
             self.layer_list[-1].set_type("Transmision")
         for i in range(len(self.layer_list)):
             if i >= layer_index:
