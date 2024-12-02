@@ -4,7 +4,9 @@ import numpy as np
 from Utils.MediumClass import Medium
 
 # http://mwl.diet.uniroma1.it/people/pisa/RFELSYS/MATERIALE%20INTEGRATIVO/BOOKS/Pozar_Microwave%20Engineering(2012).pdf
-# https://sci-hub.se/10.1109/JRPROC.1944.230657
+
+# Transmission-Line Analogies of Plane Electromagnetic-Wave Reflections ARTHUR BRONWELL, SENIOR MEMBER, I.R.E.
+
 # https://www.researchgate.net/profile/Suthasinee-Lamultree/publication/229091611_Analysis_of_planar_multilayer_structures_at_oblique_incidence_using_an_equivalent_BCITL_model/links/0fcfd50052d1b542b9000000/Analysis-of-planar-multilayer-structures-at-oblique-incidence-using-an-equivalent-BCITL-model.pdf
 
 
