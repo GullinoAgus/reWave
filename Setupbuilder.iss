@@ -21,7 +21,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
-OutputBaseFilename=mysetup
+OutputBaseFilename=reWave Installer
 SetupIconFile=D:\Documents\GitHub\TP_EMAG\reWave.ico
 Compression=lzma
 SolidCompression=yes
