@@ -145,19 +145,27 @@ el siguiente desarrollo se tomaran las figuras de .
 
 En base a este gráfico se puede describir la onda incidente (primada) y
 reflejada (doble primada) como:
-
-E’\_z=E’\_0\*e^\_01\*(x\*()-y\*())  
-E”\_z=E”\_0\*e^-\_01\*(x\*()+y\*())
-
+```math
+    E'_z=E'_0*e^{\gamma_{01}*(x*\cos(\theta)-y*\sin(\theta))}
+```
+```math
+    E''_z=E''_0*e^{-\gamma_{01}*(x*\cos(\theta)+y*\sin(\theta))}
+```
 De esta forma el campo resultante en la interfaz es:
 
-E_z=\*e^-\_01\*y\*()
+```math
+    E_z=\left[E'_0*e^{\gamma_{01}*x*\cos(\theta)} +
+    E''_0*e^{-\gamma_{01}*x*\cos(\theta)}\right]*e^{-\gamma_{01}*y*\sin(\theta)}
+```
 
 Con esta expresión se puede obtener el campo magnético en la interfaz
 dividiendo por la impedancia característica del medio y ajustando el
 signo de la componente reflejada(corrección por convención):
 
-H=1/\_01\*e^-\_01\*y\*()
+```math
+    H=1/\eta_{01}\left[E'_0*e^{\gamma_{01}*x*\cos(\theta)} -
+    E''_0*e^{-\gamma_{01}*x*\cos(\theta)}\right]*e^{-\gamma_{01}*y*\sin(\theta)}
+```
 
 En este caso, la componente *y* del campo H es la que aporta a la
 incidencia de la onda TEM perpendicular a la superficie, por lo que
@@ -167,10 +175,18 @@ equivalente del medio para este angulo de incidencia. Con esto se pueden
 obtener las expresiones para las nuevas constantes del medio 1(las de
 subíndice 11):
 
-H_y = ()\*H = ()/\_01 \* E_z  
-\_11 = \_01 \* ()  
-\_11 = \_01 \* ()  
-\_term = E(0)/H_y(0)
+```math
+    H_y = \cos(\theta)*H = \cos(\theta)/\eta_{01} * E_z
+```
+```math
+    \eta_{11} = \eta_{01} * \sec(\theta)
+```
+```math
+    \gamma_{11} = \gamma_{01} * \cos(\theta)
+```
+```math
+    \eta_{term} = E(0)/H_y(0)
+```
 
 Esa ultima ecuación representa la impedancia de terminación de la linea
 de transmisión equivalente siendo el cociente entre el campo eléctrico y
@@ -178,13 +194,19 @@ magnético en la interfaz, denotado por el (0). Con esto ultimo se pueden
 reescribir los campos utilizando las expresiones obtenidas evaluando en
 la interfaz:
 
-E’\_0=\*(1+) E”\_0=\*(1-)  
+```math
+    E'_0=\frac{E(0)}{2}*(1+\frac{\eta_{11}}{\eta_{term}}) \quad  \quad \quad E''_0=\frac{E(0)}{2}*(1-\frac{\eta_{11}}{\eta_{term}})
+``` 
 
 Con esto se puede escribir los campos, que luego de reemplazar las
 exponenciales por equivalencias hiperbólicas se obtiene:
 
-E_z = E(0) \* \*e^-\_01\*y\*()  
-H_y = E(0)/\_term \* \*e^-\_01\*y\*()
+```math
+    E_z = E(0) * \left[\cosh(\gamma_{11}x) + \frac{\eta_{11}}{\eta_{term}}*\sinh(\gamma_{11}x)\right]*e^{-\gamma_{01}*y*\sin(\theta)}
+```
+```math
+    H_y = E(0)/\eta_{term} * \left[\cosh(\gamma_{11}x) - \frac{\eta_{term}}{\eta_{11}}*\sinh(\gamma_{11}x)\right]*e^{-\gamma_{01}*y*\sin(\theta)}
+``` 
 
 En estas ecuaciones se ve la clara similitud con las ecuaciones de la
 tensión y corriente a lo largo de una linea de transmisión, salvando la
@@ -197,54 +219,92 @@ condiciones de contorno teniendo en cuenta que ambos campos
 *E*<sub>*z*</sub> y *H*<sub>*y*</sub> son tangenciales a la superficie,
 así obteniendo los campos transmitidos(triple primada):
 
-E”’\_z=E(0)\*e^-\_02\*(-x\*(\_t)+y\*(\_t))  
-H”’\_y=E(0)/\_02\*(\_t)\*e^-\_02\*(-x\*(\_t)+y\*(\_t))  
+```math
+E'''_z=E(0)*e^{-\gamma_{02}*(-x*\cos(\theta_t)+y*\sin(\theta_t))}
+``` 
+```math
+    H'''_y=E(0)/\eta_{02}*\cos(\theta_t)*e^{-\gamma_{02}*(-x*\cos(\theta_t)+y*\sin(\theta_t))}
+```   
 
 De aquí se pueden reemplazar las igualdades:
 
-\_22 = \_02 \* (\_t)  
-\_22 = \_02 \* (\_t)  
+```math
+    \eta_{22} = \eta_{02} * \sec(\theta_t)
+``` 
+```math
+    \gamma_{22} = \gamma_{02} * \cos(\theta_t)
+```  
 
 Obteniendo:
 
-E”’\_z=E(0)\*e^\_22\*xe^-\_02y\*(\_t)  
-H”’\_y=E(0)/\_02\*e^\_22\*xe^-\_22y\*(\_t)  
+```math
+    E'''_z=E(0)*e^{\gamma_{22}*x}e^{-\gamma_{02}y*\sin(\theta_t)}
+``` 
+```math
+    H'''_y=E(0)/\eta_{02}*e^{\gamma_{22}*x}e^{-\gamma_{22}y*\sin(\theta_t)}
+```   
 
 Evaluando en la interfaz y utilizando las condiciones de contorno se
 puede hacer el cociente y obtener
-*η*<sub>*t**e**r**m*</sub> = *Z*<sub>22</sub>, terminando así el modelo.
+*η*<sub>*term*</sub> = *Z*<sub>22</sub>, terminando así el modelo.
 
 Con esto se puede obtener el coeficiente de reflexion:
 
-\_12 =
+```math
+    \Gamma_{12} = \frac{\eta_{22}- \eta_{11}}{\eta_{22} + \eta_{11}}
+``` 
 
 ## Onda TM
 
 Analogo a lo anterior se puede obtener las componentes que componen al
 frente de onda con incidencia normal:
 
-H_z=\*e^-\_01\*y\*()  
-E_y=\_01\*()\*e^-\_01\*y\*()
+```math
+    H_z=\left[H'_0*e^{\gamma_{01}*x*\cos(\theta_i)} +
+    H''_0*e^{-\gamma_{01}*x*\cos(\theta)}\right]*e^{-\gamma_{01}*y*\sin(\theta)}
+``` 
+```math
+    E_y=\eta_{01}*\cos(\theta)\left[H'_0*e^{\gamma_{01}*x*\cos(\theta)} +
+    H''_0*e^{-\gamma_{01}*x*\cos(\theta)}\right]*e^{-\gamma_{01}*y*\sin(\theta)}
+``` 
 
 Si se toman las siguientes ecuaciones:
 
-\_11 = \_01()  
-\_11 = \_01()  
-\_term = E_y(0)/H(0)
+```math
+    \eta_{11} = \eta_{01}\cos(\theta)
+```  
+```math
+    \gamma_{11} = \gamma_{01}\cos(\theta)
+``` 
+```math
+    \eta_{term} = E_y(0)/H(0)
+``` 
 
 Con esto se obtienen las ecuaciones de los campos:
 
-E_y = E_y(0) \* \*e^-\_01\*y\*()  
-H_z = E_y(0)/\_term \* \*e^-\_01\*y\*()
+```math
+    E_y = E_y(0) * \left[\cosh(\gamma_{11}x) + \frac{\eta_{11}}{\eta_{term}}*\sinh(\gamma_{11}x)\right]*e^{-\gamma_{01}*y*\sin(\theta)}
+```  
+```math
+    H_z = E_y(0)/\eta_{term} * \left[\cosh(\gamma_{11}x) + \frac{\eta_{term}}{\eta_{11}}*\sinh(\gamma_{11}x)\right]*e^{-\gamma_{01}*y*\sin(\theta)}
+``` 
 
 De forma equivalente se obtienen las ecuaciones en el medio 2:
 
-E”’\_y=E_y(0)\*e^\_22\*xe^-\_02y\*(\_t)  
-H”’\_z=E_y(0)/\_02\*e^\_22\*xe^-\_22y\*(\_t)  
-\_22 = \_02 \* (\_t)  
-\_22 = \_02 \* (\_t)  
+```math
+   E'''_y=E_y(0)*e^{\gamma_{22}*x}e^{-\gamma_{02}y*\sin(\theta_t)}
+``` 
+```math
+    H'''_z=E_y(0)/\eta_{02}*e^{\gamma_{22}*x}e^{-\gamma_{22}y*\sin(\theta_t)}
+``` 
+```math
+    \eta_{22} = \eta_{02} * \cos(\theta_t)
+``` 
+```math
+    \gamma_{22} = \gamma_{02} * \cos(\theta_t)
+```  
 
-Con esto se puede obtener *η*<sub>*t**e**r**m*</sub> = *Z*<sub>22</sub>,
+Con esto se puede obtener *η*<sub>*term*</sub> = *Z*<sub>22</sub>,
 terminando así el modelo. Y nuevamente el coeficiente de reflexión es el
 mismo que en el caso anterior.
 
