@@ -144,7 +144,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if (layer_num == 0 and direction == 1) or (layer_num == 1 and direction == -1):
             self.layer_list[0].set_type("Intermedio")
             self.layer_list[1].set_type("Incidencia")
-        if (layer_num == len(self.layer_list) - 1 and direction == -1) or (layer_num == len(self.layer_list) - 2 and direction == 1):
+        elif (layer_num == len(self.layer_list) - 1 and direction == -1) or (layer_num == len(self.layer_list) - 2 and direction == 1):
             self.layer_list[-1].set_type("Intermedio")
             self.layer_list[-2].set_type("Transmision")
         self.layer_list[layer_num].layer_num = layer_num + direction
