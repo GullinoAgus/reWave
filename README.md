@@ -126,7 +126,7 @@ dependerá de la clase de barrido.
 
 # Marco teórico
 
-Para desarrollar esta herramienta se consulto . En este trabajo se
+Para desarrollar esta herramienta se consulto Bronwell et. al. 1994. En este trabajo se
 propone un método de modelado de la física de incidencia oblicua como un
 circuito serie de lineas de transmisión. En primer lugar se demuestra la
 equivalencia entre incidencia normal y lineas de transmisión, lo cual es
@@ -135,7 +135,7 @@ casos. El problema surge con incidencia oblicua. El procedimiento de
 modelado para la incidencia oblicua comienza por la interpretación la
 onda plana como un frente de onda no uniforme. Esto permite descomponer
 la onda en la propagación perpendicular y paralela a la superficie. Para
-el siguiente desarrollo se tomaran las figuras de .
+el siguiente desarrollo se tomaran las figuras de Bronwell et. al. 1994.
 
 ## Onda TE
 
@@ -311,3 +311,6 @@ mismo que en el caso anterior.
 Se puede demostrar que con estas expresiones se alcanzan las ecuaciones
 de Fresnell de forma trivial desde la expresión del coeficiente de
 reflexión.
+
+# Referencias
+Bronwell, A. Transmission-Line Analogies of Plane Electromagnetic-Wave Reflections. Vol. 32, no. 4, IEEE, Apr. 1944, pp. 233–241, https://doi.org/10.1109/JRPROC.1944.230657.
