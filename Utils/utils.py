@@ -1,6 +1,5 @@
 import numpy as np
 from MediumClass import Medium
-import skrf as rf
 
 from Utils.TLineNetworkClass import Interface
 

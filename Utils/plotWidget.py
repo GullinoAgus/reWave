@@ -1,5 +1,6 @@
 import os.path
 from PyQt6 import QtWidgets
+from matplotlib.ticker import AutoLocator, FuncFormatter, LinearLocator, StrMethodFormatter
 import numpy as np
 from matplotlib import scale, rcParams
 from matplotlib.axes import Axes
@@ -10,7 +11,7 @@ from matplotlib.patches import Rectangle, PathPatch, Arc
 from matplotlib.path import Path
 from matplotlib.widgets import Cursor
 import mplcursors
-from scipy import signal
+rcParams['axes.formatter.useoffset'] = False
 
 
 class MplCanvas(FigureCanvas):
@@ -31,10 +32,16 @@ class MplCanvas(FigureCanvas):
         parent.layout().addWidget(self)
         self.cursor = Cursor(self.axes, useblit=True,
                              color='gray', linestyle='--', linewidth=0.8)
+        self.y_locator = AutoLocator()
+        self.y_formater = StrMethodFormatter('{y:.3f}')
+        self.axes.yaxis.set_major_locator(self.y_locator)
+        self.axes.yaxis.set_major_formatter(self.y_formater)
 
     def plot_effeciency(self, x, y, ylims=None, xlims=None):
         self.axes.clear()
         line = self.axes.plot(x, y)
+        self.axes.yaxis.set_major_locator(self.y_locator)
+        self.axes.yaxis.set_major_formatter(self.y_formater)
         self.dataCursor = mplcursors.cursor(line)
 
         self.axes.set_xscale('log')
@@ -55,16 +62,18 @@ class MplCanvas(FigureCanvas):
     def plot_gammas(self, x, y1, y2, ylims=None, xlims=None):
         self.axes.clear()
         line1 = self.axes.plot(
-            x*180/np.pi, y1, label="$|\Gamma_{{\parallel}}|$")
-        line2 = self.axes.plot(x*180/np.pi, y2, label="$|\Gamma_{{\perp}}|$")
+            x*180/np.pi, y1, label="$|\\Gamma_{{\\parallel}}|$")
+        line2 = self.axes.plot(x*180/np.pi, y2, label="$|\\Gamma_{{\\perp}}|$")
+        self.axes.yaxis.set_major_locator(self.y_locator)
+        self.axes.yaxis.set_major_formatter(self.y_formater)
         self.dataCursor = [mplcursors.cursor(line1), mplcursors.cursor(line2)]
 
         self.axes.set_xscale('linear')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes.legend()
-        self.axes.set_xlabel('Angulo de incidencia [$\degree$]')
-        self.axes.set_ylabel('$|\Gamma|$')
+        self.axes.set_xlabel('Angulo de incidencia [$\\degree$]')
+        self.axes.set_ylabel('$|\\Gamma|$')
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
         if hasattr(xlims, '__iter__'):
