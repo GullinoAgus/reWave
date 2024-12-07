@@ -13,7 +13,7 @@ from Utils.MediumClass import Medium
 class TLineNetwork():
 
     def __init__(self, layer_list: list[Medium], theta_i: float):
-
+        # Calculo de la lista de medios con sus angulos de propagacion
         self._theta_i = theta_i
         self._layer_list = layer_list
         self._theta_mediums = [theta_i] + [self.get_theta_t(m1, m2) for m1, m2 in zip(
@@ -22,36 +22,104 @@ class TLineNetwork():
         pass
 
     def calc_equiv_impedance(self, Zo, Zl, gammaL):
+        '''
+        Funcion que calcula la impedancia equivalente vista desde 
+        una distancia L de una interfaz entre 2 medios.
+
+        Zo : float - Impedancia caracteristica del medio de incidencia
+        Zl : float - Impedancia del medio luego de la interfaz
+        gammaL : complex float - const de propagacion * ancho del medio.
+
+        '''
         return Zo*(Zl+Zo*np.tanh(gammaL))/(Zo+Zl*np.tanh(gammaL))
 
     def calc_reflection_coeff(self, Zo, Zl):
+        '''
+        Calculo de coeficiente de reflexion en una interfaz
+        '''
         return (Zl-Zo)/(Zl+Zo)
 
-    def calc_total_equiv_impedance_par(self, freq):
+    def calc_total_equiv_impedance_and_loss_par(self, freq):
+        '''
+        Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
+        para ondas TM
+
+         freq : float - frecuencia de operacion en Hz
+        Returns:
+        tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
+
+        '''
+        # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
         Zl = self._layer_list[-1].Zo_par(freq, self._theta_mediums[-1])
+        loss = 0
+        # Para cada medio intermedio, calculo su impedancia de entrada equivalente
+        # teniendo en cuenta todas las capas anteriores.
+        # Tambien se van acumulando las perdidas de cada medio.
         for m1, theta1 in zip(self._layer_list[-2:0:-1], self._theta_mediums[-2:0:-1]):
             Zo = m1.Zo_par(freq, theta1)
             gammaL = m1.prop_coef_par(freq, theta1) * m1.width(freq)
+
+            # Calculo de perdidas de la capa actual
+            a = np.exp(2*np.real(gammaL), dtype=np.float128)
+            ref_coef = (Zl-Zo)/(Zl+Zo)
+            loss += 10*np.log10((a**2 - np.abs(ref_coef)**2) /
+                                (a * (1-np.abs(ref_coef)**2)))
+
+            # Calculo de la impedancia equivalente
             Zl = self.calc_equiv_impedance(Zo, Zl, gammaL)
-        return Zl
 
-    def calc_total_reflection_coef_par(self, freq):
-        Zl = self.calc_total_equiv_impedance_par(freq)
+        return Zl, loss
+
+    def calc_total_reflection_coef_and_losses_par(self, freq):
+        '''
+        Calculo del coeficiente de reflexion entre el medio de incidencia y el sistema multicapa
+        y las perdidas acumuladas de toda la cadena de lineas
+        para ondas TM
+
+         freq : float - frecuencia de operacion en Hz
+        Returns:
+        tuple[complex, float] - (total coeficiente de reflexion, total perdidas acumuladas en dB)
+
+        '''
+        Zl, losses = self.calc_total_equiv_impedance_and_loss_par(freq)
         Zo = self._layer_list[0].Zo_par(freq, self._theta_mediums[0])
-        return self.calc_reflection_coeff(Zo, Zl)
+        return self.calc_reflection_coeff(Zo, Zl), losses
 
-    def calc_total_equiv_impedance_per(self, freq):
+    def calc_total_equiv_impedance_and_loss_per(self, freq):
+        '''
+        Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
+        para ondas TE. Para funcionamiento ver calc_total_equiv_impedance_and_loss_par
+
+         freq : float - frecuencia de operacion en Hz
+        Returns:
+        tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
+        '''
         Zl = self._layer_list[-1].Zo_per(freq, self._theta_mediums[-1])
+        loss = 0
         for m1, theta1 in zip(self._layer_list[-2:0:-1], self._theta_mediums[-2:0:-1]):
             Zo = m1.Zo_per(freq, theta1)
             gammaL = m1.prop_coef_per(freq, theta1) * m1.width(freq)
+            a = np.exp(2*np.real(gammaL))
+            ref_coef = (Zl-Zo)/(Zl+Zo)
+            loss += 10*np.log10((a**2 - np.abs(ref_coef)**2) /
+                                (a * (1-np.abs(ref_coef)**2)))
             Zl = self.calc_equiv_impedance(Zo, Zl, gammaL)
-        return Zl
+        return Zl, loss
 
-    def calc_total_reflection_coef_per(self, freq):
-        Zl = self.calc_total_equiv_impedance_per(freq)
+    def calc_total_reflection_coef_and_losses_per(self, freq):
+        '''
+        Calculo del coeficiente de reflexion entre el medio de incidencia y el sistema multicapa
+        y las perdidas acumuladas de toda la cadena de lineas
+        para ondas TE
+
+         freq : float - frecuencia de operacion en Hz
+        Returns:
+        tuple[complex, float] - (total coeficiente de reflexion, total perdidas acumuladas en dB)
+
+        '''
+        Zl, losses = self.calc_total_equiv_impedance_and_loss_per(freq)
         Zo = self._layer_list[0].Zo_per(freq, self._theta_mediums[0])
-        return self.calc_reflection_coeff(Zo, Zl)
+        return self.calc_reflection_coeff(Zo, Zl), losses
 
     @property
     def theta_i(self):

@@ -24,26 +24,30 @@ class MplCanvas(FigureCanvas):
         self.rigthPatch = None
         self.middlePatch = None
         self.wpcirclePatch = None
-        self.axes: Axes = self.fig.add_subplot()
-        self.fig.set_tight_layout(True)
+        self.axes: Axes = self.fig.add_subplot(111)
         super().__init__(self.fig)
         self.navToolBar = NavigationToolbar(self, parent)
-        parent.layout().addWidget(self.navToolBar)
-        parent.layout().addWidget(self)
+        self.layout = QtWidgets.QVBoxLayout()
+        self.layout.addWidget(self.navToolBar)
+        self.layout.addWidget(self)
+        parent.layout().addLayout(self.layout)
         self.cursor = Cursor(self.axes, useblit=True,
                              color='gray', linestyle='--', linewidth=0.8)
         self.y_locator = AutoLocator()
-        self.y_formater = StrMethodFormatter('{y:.3f}')
+        self.y_formater = StrMethodFormatter('{x:.3f}')
         self.axes.yaxis.set_major_locator(self.y_locator)
         self.axes.yaxis.set_major_formatter(self.y_formater)
+        self.axes.format_coord = format_coord_piola
 
-    def plot_effeciency(self, x, y, ylims=None, xlims=None):
+    def plot_effeciency(self, x, EA, ylims=None, xlims=None):
         self.axes.clear()
-        line = self.axes.plot(x, y)
+        self.axes.format_coord = format_coord_piola
+
+        line1 = self.axes.plot(x, EA)
         self.axes.yaxis.set_major_locator(self.y_locator)
         self.axes.yaxis.set_major_formatter(self.y_formater)
-        self.dataCursor = mplcursors.cursor(line)
 
+        self.dataCursor = mplcursors.cursor(line1)
         self.axes.set_xscale('log')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
@@ -59,15 +63,43 @@ class MplCanvas(FigureCanvas):
 
         self.fig.canvas.draw()
 
-    def plot_gammas(self, x, y1, y2, ylims=None, xlims=None):
+    def plot_coefs(self, x, ref, trans, ylims=None, xlims=None):
         self.axes.clear()
+        self.axes.format_coord = format_coord_piola
+
+        line1 = self.axes.plot(
+            x, ref, label="Coef. de Reflexion $\\vec{{S}}$")
+        line2 = self.axes.plot(
+            x, trans, label="Coef. de Transmision de $\\vec{{S}}$")
+        self.axes.legend()
+        self.dataCursor = [mplcursors.cursor(line1), mplcursors.cursor(line2)]
+        self.axes.set_xscale('log')
+        self.axes.set_yscale('log')
+        self.axes.grid(which='both')
+        self.axes.set_xlabel('Frecuencia [GHz]')
+        self.axes.set_ylabel('Coeficientes de Reflexión y Transmisión [UA]')
+        if hasattr(ylims, '__iter__'):
+            self.axes.set_ylim(ylims[0], ylims[1])
+        if hasattr(xlims, '__iter__'):
+            self.axes.set_xlim(xlims[0], xlims[1])
+        else:
+            xlims = self.axes.get_xlim()
+            self.axes.set_xlim(xlims[0], xlims[1])
+
+        self.fig.canvas.draw()
+
+    def plot_gammas(self, x, y1, y2, ylims=None, xlims=None):
+        self.fig.tight_layout()
+        self.axes.clear()
+        self.axes.format_coord = format_coord_piola
+
         line1 = self.axes.plot(
             x*180/np.pi, y1, label="$|\\Gamma_{{\\parallel}}|$")
-        line2 = self.axes.plot(x*180/np.pi, y2, label="$|\\Gamma_{{\\perp}}|$")
+        line2 = self.axes.plot(
+            x*180/np.pi, y2, label="$|\\Gamma_{{\\perp}}|$")
         self.axes.yaxis.set_major_locator(self.y_locator)
         self.axes.yaxis.set_major_formatter(self.y_formater)
         self.dataCursor = [mplcursors.cursor(line1), mplcursors.cursor(line2)]
-
         self.axes.set_xscale('linear')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
@@ -85,24 +117,8 @@ class MplCanvas(FigureCanvas):
         self.fig.canvas.draw()
 
 
-def make_format(current, other):
-    # current and other are axes
-    def format_coord(x, y):
-        # x, y are data coordinates
-        # convert to display coords
-        display_coord = current.transData.transform((x, y))
-        inv = other.transData.inverted()
-        # convert back to data coords with respect to ax
-        ax_coord = inv.transform(display_coord)
-        coords = [ax_coord, (x, y)]
-        return ('Left: {:<}   Right: {:}'
-                .format(*['({:.3E}, {:.3E})'.format(x, y) for x, y in coords]))
-
-    return format_coord
-
-
-def format_coord_complex(x, y):
-    return "{:.2E} + j*({:.2E})".format(x, y)
+def format_coord_piola(x, y):
+    return '({:.3E}, {:.3E})'.format(x, y)
 
 
 def calculate_ticks(ax, ticks, round_to=0.1, center=False):
