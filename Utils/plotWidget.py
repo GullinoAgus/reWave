@@ -9,22 +9,24 @@ from matplotlib.backends.backend_qtagg import FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle, PathPatch, Arc
 from matplotlib.path import Path
-from matplotlib.widgets import Cursor
+from matplotlib.widgets import Cursor, MultiCursor
 import mplcursors
-rcParams['axes.formatter.useoffset'] = False
 
 
 class MplCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
+        rcParams['axes.formatter.useoffset'] = False
         self.hspan = None
         self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.fig.tight_layout()
         self.dataCursor = None
         self.leftPatch = None
         self.rigthPatch = None
         self.middlePatch = None
         self.wpcirclePatch = None
         self.axes: Axes = self.fig.add_subplot(111)
+        self.axes2 = None
         super().__init__(self.fig)
         self.navToolBar = NavigationToolbar(self, parent)
         self.layout = QtWidgets.QVBoxLayout()
@@ -46,8 +48,9 @@ class MplCanvas(FigureCanvas):
         line1 = self.axes.plot(x, EA)
         self.axes.yaxis.set_major_locator(self.y_locator)
         self.axes.yaxis.set_major_formatter(self.y_formater)
+        self.fig.tight_layout()
 
-        self.dataCursor = mplcursors.cursor(line1)
+        self.dataCursor = mplcursors.cursor(line1, hover='Transient')
         self.axes.set_xscale('log')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
@@ -64,20 +67,32 @@ class MplCanvas(FigureCanvas):
         self.fig.canvas.draw()
 
     def plot_coefs(self, x, ref, trans, ylims=None, xlims=None):
+        if self.axes2 == None:
+            self.init_plot_coefs()
         self.axes.clear()
+        self.axes2.clear()
         self.axes.format_coord = format_coord_piola
+        self.axes2.format_coord = format_coord_piola
+        self.fig.subplots_adjust(hspace=0.)
 
         line1 = self.axes.plot(
             x, ref, label="Coef. de Reflexion $\\vec{{S}}$")
-        line2 = self.axes.plot(
+
+        line2 = self.axes2.plot(
             x, trans, label="Coef. de Transmision de $\\vec{{S}}$")
-        self.axes.legend()
-        self.dataCursor = [mplcursors.cursor(line1), mplcursors.cursor(line2)]
+        yticks = self.axes.get_yticklabels()
+        self.fig.tight_layout()
+        yticks[-1].set_visible(False)
+        self.dataCursor = [mplcursors.cursor(
+            line1, hover='Transient'), mplcursors.cursor(line2, hover='Transient')]
         self.axes.set_xscale('log')
-        self.axes.set_yscale('log')
+        self.axes.set_yscale('linear')
+        self.axes2.set_yscale('linear')
         self.axes.grid(which='both')
-        self.axes.set_xlabel('Frecuencia [GHz]')
-        self.axes.set_ylabel('Coeficientes de Reflexión y Transmisión [UA]')
+        self.axes2.grid(which='both')
+        self.axes2.set_xlabel('Frecuencia [GHz]')
+        self.axes.set_ylabel('Coeficientes de Reflexión [UA]')
+        self.axes2.set_ylabel('Coeficientes de Transmisión [UA]')
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
         if hasattr(xlims, '__iter__'):
@@ -89,7 +104,6 @@ class MplCanvas(FigureCanvas):
         self.fig.canvas.draw()
 
     def plot_gammas(self, x, y1, y2, ylims=None, xlims=None):
-        self.fig.tight_layout()
         self.axes.clear()
         self.axes.format_coord = format_coord_piola
 
@@ -99,13 +113,13 @@ class MplCanvas(FigureCanvas):
             x*180/np.pi, y2, label="$|\\Gamma_{{\\perp}}|$")
         self.axes.yaxis.set_major_locator(self.y_locator)
         self.axes.yaxis.set_major_formatter(self.y_formater)
-        self.dataCursor = [mplcursors.cursor(line1), mplcursors.cursor(line2)]
-        self.axes.set_xscale('linear')
-        self.axes.set_yscale('linear')
+        self.dataCursor = [mplcursors.cursor(
+            line1, hover='Transient'), mplcursors.cursor(line2, hover='Transient')]
         self.axes.grid(which='both')
         self.axes.legend()
         self.axes.set_xlabel('Angulo de incidencia [$\\degree$]')
         self.axes.set_ylabel('$|\\Gamma|$')
+        self.fig.tight_layout()
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
         if hasattr(xlims, '__iter__'):
@@ -115,6 +129,14 @@ class MplCanvas(FigureCanvas):
             self.axes.set_xlim(xlims[0], xlims[1])
 
         self.fig.canvas.draw()
+
+    def init_plot_coefs(self):
+        self.fig.clear()
+        self.axes, self.axes2 = self.fig.subplots(
+            2, 1, sharex=True, gridspec_kw={'hspace': 0})
+        self.axes.get_yaxis().get_major_formatter()
+        self.cursor = MultiCursor(canvas=self.fig.canvas, axes=[self.axes, self.axes2], useblit=True,
+                                  color='gray', linestyle='--', linewidth=0.8, horizOn=True)
 
 
 def format_coord_piola(x, y):

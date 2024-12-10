@@ -7,6 +7,8 @@ from Utils.TLineNetworkClass import TLineNetwork
 from Utils.plotWidget import MplCanvas
 from Utils.MediumClass import Medium
 
+units_dict = {'GHz': 1e9, 'MHz': 1e6, 'kHz': 1e3, 'Hz': 1}
+
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -48,8 +50,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.coefs_plot.hide()
             self.coefs_plot.navToolBar.hide()
             # Valores de angulos a evaluar y freq
-            theta_i = np.linspace(0, np.pi/2, 1000)
-            freq = float(self.min_freq_input.value()*1e9)
+            theta_i = np.linspace(0, np.pi/2, 10000)
+            freq = self.min_freq
             gamma_par = []
             gamma_per = []
             for theta in theta_i:
@@ -59,7 +61,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 gamma_par.append(
                     np.abs(net.calc_total_reflection_coef_and_losses_par(freq))[0])
                 gamma_per.append(
-                    np.abs(net.calc_total_reflection_coef_and_losses_par(freq))[0])
+                    np.abs(net.calc_total_reflection_coef_and_losses_per(freq))[0])
             self.apant_plot.plot_gammas(theta_i, gamma_par, gamma_per)
 
         else:  # Barrido de freq
@@ -68,8 +70,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # Armo la cadena de lineas de transmision equivalente
             net = TLineNetwork(layers, self.theta_i)
             # Lista de frecuencias a evaluar
-            freqs = np.logspace(np.log10(float(self.min_freq_input.value()*1e9)), np.log10(float(
-                self.max_freq_input.value()*1e9)), 1000, base=10)
+            freqs = np.logspace(np.log10(self.min_freq),
+                                np.log10(self.max_freq), 10000, base=10)
             trans = []
             EA = []
             ref = []
@@ -86,6 +88,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     # 1-|gamma|**2 agregando las perdidas
                     ref.append(np.abs(refl)**2)
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
+                    # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
             else:
                 for freq in freqs:
@@ -93,6 +96,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         freq)
                     ref.append(np.abs(refl)**2)
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
+                    # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
 
             self.apant_plot.plot_effeciency(
@@ -170,6 +174,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @property
     def theta_i(self):
         return locale.atof(self.incidence_input.text()) * np.pi / 180
+
+    @property
+    def min_freq(self):
+        return locale.atof(self.min_freq_input.text()) * units_dict[self.max_freq_unit_CB.currentText()]
+
+    @property
+    def max_freq(self):
+        return locale.atof(self.max_freq_input.text()) * units_dict[self.max_freq_unit_CB.currentText()]
 
     def layer_swap_handler(self, layer_num, direction):
         if (direction == -1 and layer_num == 0) or (direction == 1 and layer_num == len(self.layer_list) - 1):
