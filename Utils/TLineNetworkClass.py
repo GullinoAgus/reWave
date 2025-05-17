@@ -49,7 +49,7 @@ class TLineNetwork():
         '''
         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
         gamma_i = self._layer_list[0].gamma(freq)
-        Zl = self._layer_list[-1].Zo_from_theta_i_par(
+        Zl = self._layer_list[-1].Zo_TM(
             freq, self._theta_i, gamma_i)
         loss = 0
 
@@ -57,8 +57,8 @@ class TLineNetwork():
         # teniendo en cuenta todas las capas anteriores.
         # Tambien se van acumulando las perdidas de cada medio.
         for m1 in self._layer_list[-2:0:-1]:
-            Zo = m1.Zo_from_theta_i_par(freq, self._theta_i, gamma_i)
-            gammaL = m1.prop_coef_from_theta_i_par(
+            Zo = m1.Zo_TM(freq, self._theta_i, gamma_i)
+            gammaL = m1.gamma_TM(
                 freq, self._theta_i, gamma_i) * m1.width(freq)
 
             # Calculo de perdidas de la capa actual
@@ -84,7 +84,7 @@ class TLineNetwork():
 
         '''
         Zl, losses = self.calc_total_equiv_impedance_and_loss_par(freq)
-        Zo = self._layer_list[0].Zo_par(freq, self._theta_i)
+        Zo = self._layer_list[0].Zo_TM(freq, self._theta_i)
         return self.calc_reflection_coeff(Zo, Zl), losses
 
     def calc_total_equiv_impedance_and_loss_per(self, freq):
@@ -97,12 +97,12 @@ class TLineNetwork():
         tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
         '''
         gamma_i = self._layer_list[0].gamma(freq)
-        Zl = self._layer_list[-1].Zo_from_theta_i_per(
+        Zl = self._layer_list[-1].Zo_TE(
             freq, self._theta_i, gamma_i)
         loss = 0
         for m1 in self._layer_list[-2:0:-1]:
-            Zo = m1.Zo_from_theta_i_per(freq, self._theta_i, gamma_i)
-            gammaL = m1.prop_coef_from_theta_i_par(
+            Zo = m1.Zo_TE(freq, self._theta_i, gamma_i)
+            gammaL = m1.gamma_TM(
                 freq, self._theta_i, gamma_i) * m1.width(freq)
             a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
             ref_coef = (Zl-Zo)/(Zl+Zo)
@@ -123,7 +123,7 @@ class TLineNetwork():
 
         '''
         Zl, losses = self.calc_total_equiv_impedance_and_loss_per(freq)
-        Zo = self._layer_list[0].Zo_per(freq, self._theta_i)
+        Zo = self._layer_list[0].Zo_TE(freq, self._theta_i)
         return self.calc_reflection_coeff(Zo, Zl), losses
 
     @property
