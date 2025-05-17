@@ -128,7 +128,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TE
         '''
-        return self.eta_c(freq) / np.cos(theta, dtype=np.longdouble)
+        return self.eta_c(freq) / np.sin(theta, dtype=np.longdouble)
 
     def Zo_TE(self, freq, theta_i, gamma_i):
         '''

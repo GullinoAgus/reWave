@@ -47,7 +47,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             layers.append(last_layer)
 
         # Se verifica si se esta en modo barrido de angulo o frecuencia
-        
         if self.freq_sweep_check.isChecked():   # Barrido de angulo
             self.coefs_plot.hide()
             self.coefs_plot.navToolBar.hide()
@@ -101,10 +100,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
 
-            self.apant_plot.plot_effeciency(
-                freqs, EA)
-            self.coefs_plot.plot_coefs(
-                freqs, ref, trans)
+            self.apant_plot.plot_effeciency(freqs, EA)
+            self.coefs_plot.plot_coefs(freqs, ref, trans)
 
         self.tabWidget.setCurrentIndex(1)
 
