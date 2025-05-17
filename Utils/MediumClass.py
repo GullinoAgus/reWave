@@ -7,7 +7,7 @@ class Medium():
         self.ur = ur
         self.er = er
         self.u = ur * const.mu_0
-        self.e = self.er * const.epsilon_0
+        self.e = er * const.epsilon_0
         self.sigma = sigma
         self._width = width
         self._width_lambdas = width_lambdas
@@ -30,7 +30,7 @@ class Medium():
             width = self._width_lambdas * \
                 const.speed_of_light / (freq * np.sqrt(self.er))
         else:
-            width = self._width
+            width = self._width / 1000 # Pasamos los mm a mts
 
         return width
 
