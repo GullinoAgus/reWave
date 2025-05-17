@@ -56,7 +56,7 @@ class Medium():
         Returns:
         complex - coeficiente de propagacion complejo del medio
         '''
-        return np.sqrt(1j * 2 * np.pi * freq * self.u * (self.sigma + 1j * 2 * np.pi * freq * self.e), dtype=np.clongdouble )
+        return 1j * 2 * np.pi * freq * np.sqrt(self.mu * self.e_comp(self, freq), dtype=np.clongdouble)
 
     def eta(self, freq):
         '''
