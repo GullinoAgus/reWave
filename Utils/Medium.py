@@ -30,7 +30,7 @@ class Medium():
             width = self._width_lambdas * \
                 const.speed_of_light / (freq * np.sqrt(self.er))
         else:
-            width = self._width / 1000 # Pasamos los mm a mts
+            width = self._width
 
         return width
 
@@ -156,19 +156,6 @@ class Medium():
         '''
         return self.gamma(freq) * np.cos(theta, dtype=np.longdouble)
 
-    def gamma_TM(self, freq, theta_i, gamma_i):
-        '''
-        Obtener la constante de propagacion equivalente para incidencia de ondas TM
-        para una frecuencia dada y un angulo de incidencia theta
-        Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-        complex - constante de propagacion equivalente para incidencia de ondas TM
-        '''
-        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble )
-
     def gamma_TE(self, freq, theta):
         '''
         Obtener la constante de propagacion equivalente para incidencia de ondas TE
@@ -181,19 +168,6 @@ class Medium():
         complex - constante de propagacion equivalente para incidencia de ondas TE
         '''
         return self.gamma(freq) * np.cos(theta, dtype=np.longdouble)
-
-    def gamma_TE(self, freq, theta_i, gamma_i):
-        '''
-        Obtener la constante de propagacion equivalente para incidencia de ondas TE
-        para una frecuencia dada y un angulo de incidencia theta
-        Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-        complex - constante de propagacion equivalente para incidencia de ondas TE
-        '''
-        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble )
 
     def T_matrix_TM(self, freq, theta):
         '''

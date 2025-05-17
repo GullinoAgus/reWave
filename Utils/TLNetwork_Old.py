@@ -1,14 +1,6 @@
 
 import numpy as np
-
-from Utils.MediumClass import Medium
-
-# http://mwl.diet.uniroma1.it/people/pisa/RFELSYS/MATERIALE%20INTEGRATIVO/BOOKS/Pozar_Microwave%20Engineering(2012).pdf
-
-# Transmission-Line Analogies of Plane Electromagnetic-Wave Reflections ARTHUR BRONWELL, SENIOR MEMBER, I.R.E.
-
-# https://www.researchgate.net/profile/Suthasinee-Lamultree/publication/229091611_Analysis_of_planar_multilayer_structures_at_oblique_incidence_using_an_equivalent_BCITL_model/links/0fcfd50052d1b542b9000000/Analysis-of-planar-multilayer-structures-at-oblique-incidence-using-an-equivalent-BCITL-model.pdf
-
+from Medium import Medium
 
 class TLineNetwork():
 
@@ -37,7 +29,7 @@ class TLineNetwork():
         '''
         return (Zl-Zo)/(Zl+Zo)
 
-    def calc_total_equiv_impedance_and_loss_par(self, freq):
+    def calc_total_equiv_impedance_and_loss_TM(self, freq):
         '''
         Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
         para ondas TM
@@ -49,8 +41,7 @@ class TLineNetwork():
         '''
         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
         gamma_i = self._layer_list[0].gamma(freq)
-        Zl = self._layer_list[-1].Zo_TM(
-            freq, self._theta_i, gamma_i)
+        Zl = self._layer_list[-1].Zo_TM(freq, self._theta_i, gamma_i)
         loss = 0
 
         # Para cada medio intermedio, calculo su impedancia de entrada equivalente
@@ -72,7 +63,7 @@ class TLineNetwork():
 
         return Zl, loss
 
-    def calc_total_reflection_coef_and_losses_par(self, freq):
+    def calc_total_reflection_coef_and_losses_TM(self, freq):
         '''
         Calculo del coeficiente de reflexion entre el medio de incidencia y el sistema multicapa
         y las perdidas acumuladas de toda la cadena de lineas
@@ -83,11 +74,11 @@ class TLineNetwork():
         tuple[complex, float] - (total coeficiente de reflexion, total perdidas acumuladas en dB)
 
         '''
-        Zl, losses = self.calc_total_equiv_impedance_and_loss_par(freq)
+        Zl, losses = self.calc_total_equiv_impedance_and_loss_TM(freq)
         Zo = self._layer_list[0].Zo_TM(freq, self._theta_i)
         return self.calc_reflection_coeff(Zo, Zl), losses
 
-    def calc_total_equiv_impedance_and_loss_per(self, freq):
+    def calc_total_equiv_impedance_and_loss_TE(self, freq):
         '''
         Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
         para ondas TE. Para funcionamiento ver calc_total_equiv_impedance_and_loss_par
@@ -97,9 +88,9 @@ class TLineNetwork():
         tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
         '''
         gamma_i = self._layer_list[0].gamma(freq)
-        Zl = self._layer_list[-1].Zo_TE(
-            freq, self._theta_i, gamma_i)
+        Zl = self._layer_list[-1].Zo_TE(freq, self._theta_i, gamma_i)
         loss = 0
+        
         for m1 in self._layer_list[-2:0:-1]:
             Zo = m1.Zo_TE(freq, self._theta_i, gamma_i)
             gammaL = m1.gamma_TM(
@@ -122,7 +113,7 @@ class TLineNetwork():
         tuple[complex, float] - (total coeficiente de reflexion, total perdidas acumuladas en dB)
 
         '''
-        Zl, losses = self.calc_total_equiv_impedance_and_loss_per(freq)
+        Zl, losses = self.calc_total_equiv_impedance_and_loss_TE(freq)
         Zo = self._layer_list[0].Zo_TE(freq, self._theta_i)
         return self.calc_reflection_coeff(Zo, Zl), losses
 
@@ -147,7 +138,7 @@ if __name__ == "__main__":
 
     med_list = [m1, m2, m4]
     net = TLineNetwork(med_list, 0)
-    print(net.calc_total_reflection_coef_par(100e6))
+    print(net.calc_total_reflection_coef_and_losses_per(100E6))
     pass
 
 

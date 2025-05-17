@@ -1,0 +1,69 @@
+
+import numpy as np
+from Utils.Medium import Medium
+
+class TLineNetwork():
+
+    def __init__(self, layer_list: list[Medium], theta_i: float):
+        # Calculo de la lista de medios con sus angulos de propagacion
+        self._theta_i = theta_i
+        self._layer_list = layer_list
+
+        pass
+
+    def Zeq(self, Z0, Zl, gammaL):
+        '''
+        Funcion que calcula la impedancia equivalente vista desde 
+        una distancia L de una interfaz entre 2 medios.
+
+        Z0 : float - Impedancia caracteristica del medio de incidencia
+        Zl : float - Impedancia del medio luego de la interfaz
+        gammaL : complex float - const de propagacion * espesor del medio.
+
+        '''
+        return Z0*(Zl+Z0*np.tanh(gammaL, dtype=np.clongdouble))/(Z0+Zl*np.tanh(gammaL, dtype=np.clongdouble))
+
+    def Gamma(self, Z0, Zl):
+        '''
+        Calculo de coeficiente de reflexion en una interfaz
+        '''
+        return (Zl-Z0)/(Zl+Z0)
+    
+    def calc_total_reflection_coef_and_losses_TE(f: float):
+        pass
+        
+
+    @property
+    def theta_i(self):
+        return self._theta_i
+
+    @theta_i.setter
+    def theta_i(self, value):
+        if 0 <= value <= np.pi/2:
+            self._theta_i = value
+
+    @property
+    def theta_r(self):
+        return self.theta_i
+
+
+if __name__ == "__main__":
+    m1 = Medium(1, 1, 0, width=100)
+    m2 = Medium(4, 1, 0, width=0.1)
+    m4 = Medium(9, 1, 0, width=100)
+
+    med_list = [m1, m2, m4]
+    net = TLineNetwork(med_list, 0)
+    print(net.calc_total_reflection_coef_and_losses_TE(100E6))
+    pass
+
+
+'''
+Corregir ley de snell por las formulas q me mando patricio
+
+Separar coef de transmision y reflexion del poynting
+
+Agregar coef de transmision del poynting en barrido de angulo para perp y par
+
+
+'''
