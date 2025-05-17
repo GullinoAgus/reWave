@@ -3,15 +3,15 @@ import numpy as np
 
 
 class Medium():
-    def __init__(self, er, ur, sigma, width=None, width_lambdas=None):
-        self.ur = ur
+    def __init__(self, er, mur, sigma, width=None, width_lambdas=None):
+        self.mur = mur
         self.er = er
-        self.u = ur * const.mu_0
+        self.mu = mur * const.mu_0
         self.e = er * const.epsilon_0
         self.sigma = sigma
         self._width = width
         self._width_lambdas = width_lambdas
-        self.n = np.sqrt(er/ur)
+        self.n = np.sqrt(er/mur)
 
     def width(self, freq):
         '''
@@ -34,7 +34,7 @@ class Medium():
 
         return width
 
-    def e_comp(self, freq):
+    def e_c(self, freq):
         '''
         Obtener el epsilon comprejo total del medio
          para una frecuencia dada
@@ -46,7 +46,7 @@ class Medium():
         '''
         return (self.e - 1j * self.sigma / (2 * np.pi * freq))
 
-    def prop_coef(self, freq):
+    def gamma(self, freq):
         '''
         Obtener el coeficiente de propagacion complejo del medio
          para una frecuencia dada
@@ -56,9 +56,9 @@ class Medium():
         Returns:
         complex - coeficiente de propagacion complejo del medio
         '''
-        return 1j * 2 * np.pi * freq * np.sqrt(self.mu * self.e_comp(self, freq), dtype=np.clongdouble)
+        return 1j * 2 * np.pi * freq * np.sqrt(self.mu * self.e_c(freq), dtype=np.clongdouble)
 
-    def eta(self, freq):
+    def eta_c(self, freq):
         '''
         Obtener la impedancia caracteristica del medio
          para una frecuencia dada
@@ -68,7 +68,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica del medio
         '''
-        return np.sqrt(self.u / (self.e_comp(freq)), dtype=np.clongdouble )
+        return np.sqrt(self.mu / (self.e_c(freq)), dtype=np.clongdouble )
 
     def Zo_par(self, freq, theta):
         '''
@@ -81,7 +81,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TM
         '''
-        return self.eta(freq) * np.cos(theta, dtype=np.longdouble)
+        return self.eta_c(freq) * np.cos(theta, dtype=np.longdouble)
 
     def Zo_from_theta_i_par(self, freq, theta_i, gamma_i):
         '''
@@ -94,7 +94,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TM
         '''
-        return self.eta(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i))**2, dtype=np.clongdouble )
+        return self.eta_c(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i))**2, dtype=np.clongdouble )
 
     def prop_coef_par(self, freq, theta):
         '''
@@ -107,7 +107,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TM
         '''
-        return self.prop_coef(freq) * np.cos(theta, dtype=np.longdouble)
+        return self.gamma(freq) * np.cos(theta, dtype=np.longdouble)
 
     def prop_coef_from_theta_i_par(self, freq, theta_i, gamma_i):
         '''
@@ -120,7 +120,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TM
         '''
-        return self.prop_coef(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble )
+        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble )
 
     def Zo_per(self, freq, theta):
         '''
@@ -133,7 +133,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TE
         '''
-        return self.eta(freq) / np.cos(theta, dtype=np.longdouble)
+        return self.eta_c(freq) / np.cos(theta, dtype=np.longdouble)
 
     def Zo_from_theta_i_per(self, freq, theta_i, gamma_i):
         '''
@@ -146,7 +146,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TE
         '''
-        return self.eta(freq) / np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble )
+        return self.eta_c(freq) / np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble )
 
     def prop_coef_per(self, freq, theta):
         '''
@@ -159,7 +159,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TE
         '''
-        return self.prop_coef(freq) * np.cos(theta, dtype=np.longdouble)
+        return self.gamma(freq) * np.cos(theta, dtype=np.longdouble)
 
     def prop_coef_from_theta_i_per(self, freq, theta_i, gamma_i):
         '''
@@ -172,7 +172,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TE
         '''
-        return self.prop_coef(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble )
+        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble )
 
     def T_mat_par(self, freq, theta):
         '''
@@ -225,4 +225,4 @@ class Medium():
         return np.array([[A, B], [C, D]])
 
     def __repr__(self) -> str:
-        return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self.width}, width_lambdas={self.width_lambdas})"
+        return f"MediumClass(er={self.er}, ur={self.mur}, sigma={self.sigma}, width={self.width}, width_lambdas={self.width_lambdas})"

@@ -48,7 +48,7 @@ class TLineNetwork():
 
         '''
         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
-        gamma_i = self._layer_list[0].prop_coef(freq)
+        gamma_i = self._layer_list[0].gamma(freq)
         Zl = self._layer_list[-1].Zo_from_theta_i_par(
             freq, self._theta_i, gamma_i)
         loss = 0
@@ -96,7 +96,7 @@ class TLineNetwork():
         Returns:
         tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
         '''
-        gamma_i = self._layer_list[0].prop_coef(freq)
+        gamma_i = self._layer_list[0].gamma(freq)
         Zl = self._layer_list[-1].Zo_from_theta_i_per(
             freq, self._theta_i, gamma_i)
         loss = 0

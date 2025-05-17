@@ -348,12 +348,12 @@ class LayerWidget(QtWidgets.QWidget):
 
     def to_medium(self):
         if self.width_unit_CB.currentText() == "mm":
-            med = Medium(ur=self.mu_value,
+            med = Medium(mur=self.mu_value,
                          sigma=self.sigma_value,
                          er=self.epsilon_value,
                          width=self.width_value * 1e-3)
         else:
-            med = Medium(ur=self.mu_value,
+            med = Medium(mur=self.mu_value,
                          sigma=self.sigma_value,
                          er=self.epsilon_value,
                          width_lambdas=self.width_value)
