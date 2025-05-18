@@ -61,8 +61,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 # Para cada angulo calculamos nuevamente las lineas equivalente
                 # y presentamos el modulo de los coeficientes de reflexion para incidencia TM y TE
                 net = TLineNetwork(layers, theta)
-                gamma_TM.append(np.abs(net.calc_total_reflection_coef_and_losses_TE(freq))[0])
-                gamma_TE.append(np.abs(net.calc_total_reflection_coef_and_losses_TE(freq))[0])
+                gamma_TM.append(np.abs(net.get_ref_and_loss_TM(freq))[0]**2)
+                gamma_TE.append(np.abs(net.get_ref_and_loss_TE(freq))[0]**2)
 
             self.apant_plot.plot_gammas(theta_i, gamma_TM, gamma_TE)
 
@@ -75,15 +75,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             # Lista de frecuencias a evaluar
             freqs = np.logspace(np.log10(self.min_freq), np.log10(self.max_freq), 10000, base=10)
+
+            # Resultados
+            ref = []
             trans = []
             EA = []
-            ref = []
+            
             # Verifico el tipo de polarizacion incidente
             if self.polarization_CB.currentText() == "TM":
 
                 for freq in freqs:
                     # Calculo del coef de reflexion total y las perdidas
-                    refl, losses = net.calc_total_reflection_coef_and_losses_TE(freq)
+                    refl, losses = net.get_ref_and_loss_TM(freq)
 
                     # Apendeo los resultados para el vector de poynting
                     # para la reflexion es modulo cuadrado y para la transmision
@@ -94,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
             else:
                 for freq in freqs:
-                    refl, losses = net.calc_total_reflection_coef_and_losses_TE(freq)
+                    refl, losses = net.get_ref_and_loss_TE(freq)
                     ref.append(np.abs(refl)**2)
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
