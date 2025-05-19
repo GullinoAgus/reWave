@@ -41,7 +41,7 @@ class MplCanvas(FigureCanvas):
         self.axes.yaxis.set_major_formatter(self.y_formater)
         self.axes.format_coord = format_coord_piola
 
-    def plot_effeciency(self, x, EA, ylims=None, xlims=None):
+    def plot_efficiency(self, x, EA, ylims=None, xlims=None):
         self.axes.clear()
         self.axes.format_coord = format_coord_piola
 

@@ -52,17 +52,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # Valores de angulos a evaluar y freq
             theta_i = np.linspace(0, np.pi/2, 10000)
             freq = self.min_freq
-            gamma_par = []
-            gamma_per = []
+            gamma_TM = []
+            gamma_TE = []
             for theta in theta_i:
                 # Para cada angulo calculamos nuevamente las lineas equivalente
                 # y presentamos el modulo de los coeficientes de reflexion para incidencia TM y TE
                 net = TLineNetwork(layers, theta)
-                gamma_par.append(
+                gamma_TM.append(
                     np.abs(net.get_ref_and_loss_TM(freq))[0])
-                gamma_per.append(
+                gamma_TE.append(
                     np.abs(net.get_ref_and_loss_TE(freq))[0])
-            self.apant_plot.plot_gammas(theta_i, gamma_par, gamma_per)
+            self.apant_plot.plot_gammas(theta_i, gamma_TM, gamma_TE)
 
         else:  # Barrido de freq
             self.coefs_plot.show()
@@ -85,19 +85,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     # Apendeo los resultados para el vector de poynting
                     # para la reflexion es modulo cuadrado y para la transmision
                     # 1-|gamma|**2 agregando las perdidas
-                    ref.append(np.abs(refl))
+                    ref.append(np.abs(refl)**2)
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
             else:
                 for freq in freqs:
                     refl, losses = net.get_ref_and_loss_TE(freq)
-                    ref.append(np.abs(refl))
+                    ref.append(np.abs(refl)**2)
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
 
-            self.apant_plot.plot_effeciency(
+            self.apant_plot.plot_efficiency(
                 freqs, EA)
             self.coefs_plot.plot_coefs(
                 freqs, ref, trans)
