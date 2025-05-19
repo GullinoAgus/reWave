@@ -91,18 +91,6 @@ class Medium():
         '''
         return np.sqrt(self.mu / (self.e_c(freq)), dtype=np.clongdouble)
 
-    def Zo_TM_from_theta_inc(self, freq, theta_i, gamma_i):
-        '''
-        Obtener la impedancia caracteristica equivalente para incidencia de ondas TM
-        para una frecuencia dada y un angulo de incidencia theta
-        Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-        complex - impedancia caracteristica equivalente para incidencia de ondas TM
-        '''
-        return self.eta_c(freq) * np.cos(theta, dtype=np.longdouble)
 
     def Zo_TM_from_theta_inc(self, freq, theta_i, gamma_i):
         '''
@@ -117,18 +105,6 @@ class Medium():
         '''
         return self.eta_c(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i))**2, dtype=np.clongdouble )
 
-    def Zo_TE_from_theta_inc(self, freq, theta_i, gamma_i):
-        '''
-        Obtener la impedancia caracteristica equivalente para incidencia de ondas TE
-        para una frecuencia dada y un angulo de incidencia theta
-        Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-        complex - impedancia caracteristica equivalente para incidencia de ondas TE
-        '''
-        return self.eta_c(freq) / np.cos(theta, dtype=np.longdouble)
 
     def Zo_TE_from_theta_inc(self, freq, theta_i, gamma_i):
         '''
@@ -195,60 +171,6 @@ class Medium():
         '''
         return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble )
 
-    def T_matrix_TM(self, freq, theta):
-        '''
-        Obtener Matrices ABCD del medio como linea de transmision para onda incidente TM
-
-        Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-         complex - Matrices ABCD del medio como linea de transmision para onda incidente TM
-        '''
-        width = self.width(freq)
-        cosh_gamma_d = np.cosh(self.gamma_TM(freq, theta) * width)
-        sinh_gamma_d = np.sinh(self.gamma_TM(freq, theta) * width)
-
-        A = cosh_gamma_d
-        B = self.Zo_TM(freq, theta) * sinh_gamma_d
-        
-        if theta == np.pi/2:
-            C = 0  # This is NOT a typo!
-        else:
-            C = sinh_gamma_d / self.Zo_TM(freq, theta)
-
-        D = A
-
-        return np.array([[A, B], [C, D]])
-
-    def T_matrix_TE(self, freq, theta):
-        '''
-        Obtener Matrices ABCD del medio como linea de transmision para onda incidente TE
-
-         Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-         complex - Matrices ABCD del medio como linea de transmision para onda incidente TE
-        '''
-
-        width = self.width(freq)
-        cosh_gamma_d = np.cosh(self.gamma_TE(freq, theta) * width)
-        sinh_gamma_d = np.sinh(self.gamma_TE(freq, theta) * width)
-
-        A = cosh_gamma_d
-        C = sinh_gamma_d / self.Zo_TE(freq, theta)
-
-        if theta == np.pi/2:
-            B = 0  # This is NOT a typo!
-        else:
-            B = self.Zo_TE(freq, theta) * sinh_gamma_d
-
-        D = A
-
-        return np.array([[A, B], [C, D]])
 
     def __repr__(self) -> str:
         return f"MediumClass(er={self.er}, ur={self.mur}, sigma={self.sigma}, width={self._width}, width_lambdas={self.width_lambdas})"

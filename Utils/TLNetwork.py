@@ -12,7 +12,6 @@ class TLineNetwork():
         pass
 
     def Zin(self, Zo, Zl, gammaL):
-    def Zin(self, Zo, Zl, gammaL):
         '''
         Funcion que calcula la impedancia equivalente vista desde 
         una distancia L de una interfaz entre 2 medios.
@@ -24,7 +23,6 @@ class TLineNetwork():
         '''
         return Zo*(Zl+Zo*np.tanh(gammaL, dtype=np.clongdouble))/(Zo+Zl*np.tanh(gammaL, dtype=np.clongdouble))
 
-    def ref_coef(self, Zo, Zl):
     def ref_coef(self, Zo, Zl):
         '''
         Calculo de coeficiente de reflexion en una interfaz
@@ -47,7 +45,6 @@ class TLineNetwork():
 
             # Calculo de perdidas de la capa actual
             a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
-            ref_coef = self.ref_coef(Zo, Zl)
             ref_coef = self.ref_coef(Zo, Zl)
             loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) /
                                 (a * (1-np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
