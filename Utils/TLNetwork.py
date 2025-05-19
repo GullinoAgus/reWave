@@ -22,7 +22,7 @@ class TLineNetwork():
         gammaL : complex float - const de propagacion * espesor del medio.
 
         '''
-        return Zo*(Zl+Zo*np.tanh(gammaL, dtype=np.complex256))/(Zo+Zl*np.tanh(gammaL, dtype=np.complex256))
+        return Zo*(Zl+Zo*np.tanh(gammaL, dtype=np.clongdouble))/(Zo+Zl*np.tanh(gammaL, dtype=np.clongdouble))
 
     def Gamma(self, Zo, Zl):
         '''
@@ -56,10 +56,10 @@ class TLineNetwork():
                 freq, self._theta_i, gamma_i) * m1.width(freq)
 
             # Calculo de perdidas de la capa actual
-            a = np.exp(2*np.real(gammaL), dtype=np.float128)
+            a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
             ref_coef = (Zl-Zo)/(Zl+Zo)
-            loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.float128)**2) /
-                                (a * (1-np.abs(ref_coef, dtype=np.float128)**2)), dtype=np.float128)
+            loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) /
+                                (a * (1-np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
 
             # Calculo de la impedancia equivalente
             Zl = self.Zin(Zo, Zl, gammaL)
@@ -86,10 +86,10 @@ class TLineNetwork():
             Zo = m1.Zo_from_theta_i_TE(freq, self._theta_i, gamma_i)
             gammaL = m1.gamma_from_theta_i_TM(
                 freq, self._theta_i, gamma_i) * m1.width(freq)
-            a = np.exp(2*np.real(gammaL), dtype=np.float128)
+            a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
             ref_coef = (Zl-Zo)/(Zl+Zo)
-            loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.float128)**2) /
-                                (a * (1 - np.abs(ref_coef, dtype=np.float128)**2)), dtype=np.float128)
+            loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) /
+                                (a * (1 - np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
             Zl = self.Zin(Zo, Zl, gammaL)
         
         Zo = self._layer_list[0].Zo_TE(freq, self._theta_i)

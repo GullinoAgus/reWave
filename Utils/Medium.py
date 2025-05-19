@@ -55,7 +55,7 @@ class Medium():
         Returns:
         complex - coeficiente de propagacion complejo del medio
         '''
-        return np.sqrt(1j * 2 * np.pi * freq * self.u * (self.sigma + 1j * 2 * np.pi * freq * self.e), dtype=np.complex256)
+        return np.sqrt(1j * 2 * np.pi * freq * self.u * (self.sigma + 1j * 2 * np.pi * freq * self.e), dtype=np.clongdouble)
 
     def eta(self, freq):
         '''
@@ -67,7 +67,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica del medio
         '''
-        return np.sqrt(const.u / (self.e_comp(freq)), dtype=np.complex256)
+        return np.sqrt(const.u / (self.e_comp(freq)), dtype=np.clongdouble)
 
     def Zo_TM(self, freq, theta):
         '''
@@ -80,7 +80,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TM
         '''
-        return self.eta(freq) * np.cos(theta, dtype=np.float128)
+        return self.eta(freq) * np.cos(theta, dtype=np.longdouble)
 
     def Zo_from_theta_i_TM(self, freq, theta_i, gamma_i):
         '''
@@ -93,7 +93,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TM
         '''
-        return self.eta(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i))**2, dtype=np.complex256)
+        return self.eta(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i))**2, dtype=np.clongdouble)
 
     def gamma_TM(self, freq, theta):
         '''
@@ -106,7 +106,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TM
         '''
-        return self.gamma(freq) * np.cos(theta, dtype=np.float128)
+        return self.gamma(freq) * np.cos(theta, dtype=np.longdouble)
 
     def gamma_from_theta_i_TM(self, freq, theta_i, gamma_i):
         '''
@@ -119,7 +119,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TM
         '''
-        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
+        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble)
 
     def Zo_TE(self, freq, theta):
         '''
@@ -132,7 +132,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TE
         '''
-        return self.eta(freq) / np.cos(theta, dtype=np.float128)
+        return self.eta(freq) / np.cos(theta, dtype=np.longdouble)
 
     def Zo_from_theta_i_TE(self, freq, theta_i, gamma_i):
         '''
@@ -145,7 +145,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TE
         '''
-        return self.eta(freq) / np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
+        return self.eta(freq) / np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble)
 
     def gamma_TE(self, freq, theta):
         '''
@@ -158,7 +158,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TE
         '''
-        return self.gamma(freq) * np.cos(theta, dtype=np.float128)
+        return self.gamma(freq) * np.cos(theta, dtype=np.longdouble)
 
     def gamma_from_theta_i_TE(self, freq, theta_i, gamma_i):
         '''
@@ -171,7 +171,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TE
         '''
-        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
+        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble)
 
 
     def __repr__(self) -> str:
