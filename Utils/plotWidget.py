@@ -51,7 +51,7 @@ class MplCanvas(FigureCanvas):
         self.fig.tight_layout()
 
         self.dataCursor = mplcursors.cursor(line1, hover='Transient')
-        self.axes.set_xscale('log')
+        self.axes.set_xscale('linear')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes.set_xlabel('Frecuencia [GHz]')
@@ -85,7 +85,7 @@ class MplCanvas(FigureCanvas):
         yticks[-1].set_visible(False)
         self.dataCursor = [mplcursors.cursor(
             line1, hover='Transient'), mplcursors.cursor(line2, hover='Transient')]
-        self.axes.set_xscale('log')
+        self.axes.set_xscale('linear')
         self.axes.set_yscale('linear')
         self.axes2.set_yscale('linear')
         self.axes.grid(which='both')
