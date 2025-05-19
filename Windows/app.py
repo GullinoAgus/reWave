@@ -3,9 +3,9 @@ import numpy as np
 from PyQt6 import QtWidgets, QtGui, QtCore
 
 from UI.Main_UI import Ui_MainWindow
-from Utils.TLNetwork import TLineNetwork
+from Utils.TLineNetworkClass import TLineNetwork
 from Utils.plotWidget import MplCanvas
-from Utils.Medium import Medium
+from Utils.MediumClass import Medium
 
 units_dict = {'GHz': 1e9, 'MHz': 1e6, 'kHz': 1e3, 'Hz': 1}
 
@@ -38,7 +38,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for layer in self.layer_list:
             if layer.isConnected():
                 layers.append(LayerWidget.to_medium(layer))
-
         if self.period_input.value() > 1:
             last_layer = layers.pop()
             length = len(layers)
@@ -50,43 +49,39 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.freq_sweep_check.isChecked():   # Barrido de angulo
             self.coefs_plot.hide()
             self.coefs_plot.navToolBar.hide()
-
             # Valores de angulos a evaluar y freq
             theta_i = np.linspace(0, np.pi/2, 10000)
             freq = self.min_freq
-            gamma_TM = []
-            gamma_TE = []
-
+            gamma_par = []
+            gamma_per = []
             for theta in theta_i:
                 # Para cada angulo calculamos nuevamente las lineas equivalente
                 # y presentamos el modulo de los coeficientes de reflexion para incidencia TM y TE
                 net = TLineNetwork(layers, theta)
-                gamma_TM.append(np.abs(net.get_ref_and_loss_TM(freq))[0]**2)
-                gamma_TE.append(np.abs(net.get_ref_and_loss_TE(freq))[0]**2)
-
-            self.apant_plot.plot_gammas(theta_i, gamma_TM, gamma_TE)
+                gamma_par.append(
+                    np.abs(net.calc_total_reflection_coef_and_losses_par(freq))[0])
+                gamma_per.append(
+                    np.abs(net.calc_total_reflection_coef_and_losses_per(freq))[0])
+            self.apant_plot.plot_gammas(theta_i, gamma_par, gamma_per)
 
         else:  # Barrido de freq
             self.coefs_plot.show()
             self.coefs_plot.navToolBar.show()
-
             # Armo la cadena de lineas de transmision equivalente
             net = TLineNetwork(layers, self.theta_i)
-
             # Lista de frecuencias a evaluar
-            freqs = np.logspace(np.log10(self.min_freq), np.log10(self.max_freq), 10000, base=10)
-
-            # Resultados
-            ref = []
+            freqs = np.logspace(np.log10(self.min_freq),
+                                np.log10(self.max_freq), 10000, base=10)
             trans = []
             EA = []
-            
+            ref = []
             # Verifico el tipo de polarizacion incidente
             if self.polarization_CB.currentText() == "TM":
 
                 for freq in freqs:
                     # Calculo del coef de reflexion total y las perdidas
-                    refl, losses = net.get_ref_and_loss_TM(freq)
+                    refl, losses = net.calc_total_reflection_coef_and_losses_par(
+                        freq)
 
                     # Apendeo los resultados para el vector de poynting
                     # para la reflexion es modulo cuadrado y para la transmision
@@ -97,14 +92,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
             else:
                 for freq in freqs:
-                    refl, losses = net.get_ref_and_loss_TE(freq)
+                    refl, losses = net.calc_total_reflection_coef_and_losses_per(
+                        freq)
                     ref.append(np.abs(refl)**2)
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
 
-            self.apant_plot.plot_effeciency(freqs, EA)
-            self.coefs_plot.plot_coefs(freqs, ref, trans)
+            self.apant_plot.plot_effeciency(
+                freqs, EA)
+            self.coefs_plot.plot_coefs(
+                freqs, ref, trans)
 
         self.tabWidget.setCurrentIndex(1)
 
@@ -350,12 +348,12 @@ class LayerWidget(QtWidgets.QWidget):
 
     def to_medium(self):
         if self.width_unit_CB.currentText() == "mm":
-            med = Medium(mur=self.mu_value,
+            med = Medium(ur=self.mu_value,
                          sigma=self.sigma_value,
                          er=self.epsilon_value,
                          width=self.width_value * 1e-3)
         else:
-            med = Medium(mur=self.mu_value,
+            med = Medium(ur=self.mu_value,
                          sigma=self.sigma_value,
                          er=self.epsilon_value,
                          width_lambdas=self.width_value)
