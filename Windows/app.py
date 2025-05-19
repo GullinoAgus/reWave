@@ -85,14 +85,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     # Apendeo los resultados para el vector de poynting
                     # para la reflexion es modulo cuadrado y para la transmision
                     # 1-|gamma|**2 agregando las perdidas
-                    ref.append(np.abs(refl)**2)
+                    ref.append(np.abs(refl))
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
             else:
                 for freq in freqs:
                     refl, losses = net.get_ref_and_loss_TE(freq)
-                    ref.append(np.abs(refl)**2)
+                    ref.append(np.abs(refl))
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
