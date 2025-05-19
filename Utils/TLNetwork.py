@@ -12,6 +12,7 @@ class TLineNetwork():
         pass
 
     def Zin(self, Zo, Zl, gammaL):
+    def Zin(self, Zo, Zl, gammaL):
         '''
         Funcion que calcula la impedancia equivalente vista desde 
         una distancia L de una interfaz entre 2 medios.
@@ -23,6 +24,7 @@ class TLineNetwork():
         '''
         return Zo*(Zl+Zo*np.tanh(gammaL, dtype=np.clongdouble))/(Zo+Zl*np.tanh(gammaL, dtype=np.clongdouble))
 
+    def ref_coef(self, Zo, Zl):
     def ref_coef(self, Zo, Zl):
         '''
         Calculo de coeficiente de reflexion en una interfaz
@@ -46,6 +48,7 @@ class TLineNetwork():
             # Calculo de perdidas de la capa actual
             a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
             ref_coef = self.ref_coef(Zo, Zl)
+            ref_coef = self.ref_coef(Zo, Zl)
             loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) /
                                 (a * (1-np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
 
@@ -62,7 +65,7 @@ class TLineNetwork():
         gamma_inc = self._layer_list[0].gamma_TE(freq, self._theta_i)
         Zl = self._layer_list[-1].Zo_TE_from_theta_inc(freq, self._theta_i, gamma_inc)
         loss = 0
-        
+
         for m1 in self._layer_list[-2:0:-1]:
             Zo = m1.Zo_TE_from_theta_inc(freq, self._theta_i, gamma_inc)
             gammaL = m1.gamma_TE_from_theta_inc(freq, self._theta_i, gamma_inc) * m1.width(freq)
@@ -99,6 +102,7 @@ if __name__ == "__main__":
 
     med_list = [m1, m2, m4]
     net = TLineNetwork(med_list, 0)
+    print(net.get_ref_and_loss_TE(100E6))
     print(net.get_ref_and_loss_TE(100E6))
     pass
 

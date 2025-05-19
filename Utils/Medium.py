@@ -64,7 +64,7 @@ class Medium():
 
         Fórmula fundamental:
             η = √(μ/ε_c)
-        
+
         Donde:
             μ: Permeabilidad magnética del medio [H/m]
             ε_c: Permitividad compleja = ε - j(σ/ω)
@@ -89,9 +89,9 @@ class Medium():
         >>> print(f"{eta:.2f} Ω")
         (123.45+67.89j) Ω
         '''
-        return np.sqrt(self.mu / (self.e_c(freq)), dtype=np.clongdouble )
+        return np.sqrt(self.mu / (self.e_c(freq)), dtype=np.clongdouble)
 
-    def Zo_TM(self, freq, theta):
+    def Zo_TM_from_theta_inc(self, freq, theta_i, gamma_i):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TM
         para una frecuencia dada y un angulo de incidencia theta
@@ -117,7 +117,7 @@ class Medium():
         '''
         return self.eta_c(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i))**2, dtype=np.clongdouble )
 
-    def Zo_TE(self, freq, theta):
+    def Zo_TE_from_theta_inc(self, freq, theta_i, gamma_i):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TE
         para una frecuencia dada y un angulo de incidencia theta
