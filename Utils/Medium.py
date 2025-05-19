@@ -11,7 +11,7 @@ class Medium():
         self.sigma = sigma
         self._width = width
         self._width_lambdas = width_lambdas
-        self.n = np.sqrt(er/ur)
+        self.n = np.sqrt(self.e*self.u)
 
     def width(self, freq):
         '''
@@ -27,8 +27,7 @@ class Medium():
         float - ancho de la capa en metros
         '''
         if self._width == None:
-            width = self._width_lambdas * \
-                const.speed_of_light / (freq * np.sqrt(self.er))
+            width = self._width_lambdas * const.speed_of_light / (freq * np.sqrt(self.er * self.ur))
         else:
             width = self._width
 
@@ -46,7 +45,7 @@ class Medium():
         '''
         return (self.e - 1j * self.sigma / (2 * np.pi * freq))
 
-    def prop_coef(self, freq):
+    def gamma(self, freq):
         '''
         Obtener el coeficiente de propagacion complejo del medio
          para una frecuencia dada
@@ -70,7 +69,7 @@ class Medium():
         '''
         return np.sqrt(const.u / (self.e_comp(freq)), dtype=np.complex256)
 
-    def Zo_par(self, freq, theta):
+    def Zo_TM(self, freq, theta):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TM
         para una frecuencia dada y un angulo de incidencia theta
@@ -83,7 +82,7 @@ class Medium():
         '''
         return self.eta(freq) * np.cos(theta, dtype=np.float128)
 
-    def Zo_from_theta_i_par(self, freq, theta_i, gamma_i):
+    def Zo_from_theta_i_TM(self, freq, theta_i, gamma_i):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TM
         para una frecuencia dada y un angulo de incidencia theta
@@ -94,9 +93,9 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TM
         '''
-        return self.eta(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i))**2, dtype=np.complex256)
+        return self.eta(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i))**2, dtype=np.complex256)
 
-    def prop_coef_par(self, freq, theta):
+    def gamma_TM(self, freq, theta):
         '''
         Obtener la constante de propagacion equivalente para incidencia de ondas TM
         para una frecuencia dada y un angulo de incidencia theta
@@ -107,9 +106,9 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TM
         '''
-        return self.prop_coef(freq) * np.cos(theta, dtype=np.float128)
+        return self.gamma(freq) * np.cos(theta, dtype=np.float128)
 
-    def prop_coef_from_theta_i_par(self, freq, theta_i, gamma_i):
+    def gamma_from_theta_i_TM(self, freq, theta_i, gamma_i):
         '''
         Obtener la constante de propagacion equivalente para incidencia de ondas TM
         para una frecuencia dada y un angulo de incidencia theta
@@ -120,9 +119,9 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TM
         '''
-        return self.prop_coef(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
+        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
 
-    def Zo_per(self, freq, theta):
+    def Zo_TE(self, freq, theta):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TE
         para una frecuencia dada y un angulo de incidencia theta
@@ -135,7 +134,7 @@ class Medium():
         '''
         return self.eta(freq) / np.cos(theta, dtype=np.float128)
 
-    def Zo_from_theta_i_per(self, freq, theta_i, gamma_i):
+    def Zo_from_theta_i_TE(self, freq, theta_i, gamma_i):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TE
         para una frecuencia dada y un angulo de incidencia theta
@@ -146,9 +145,9 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TE
         '''
-        return self.eta(freq) / np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
+        return self.eta(freq) / np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
 
-    def prop_coef_per(self, freq, theta):
+    def gamma_TE(self, freq, theta):
         '''
         Obtener la constante de propagacion equivalente para incidencia de ondas TE
         para una frecuencia dada y un angulo de incidencia theta
@@ -159,9 +158,9 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TE
         '''
-        return self.prop_coef(freq) * np.cos(theta, dtype=np.float128)
+        return self.gamma(freq) * np.cos(theta, dtype=np.float128)
 
-    def prop_coef_from_theta_i_per(self, freq, theta_i, gamma_i):
+    def gamma_from_theta_i_TE(self, freq, theta_i, gamma_i):
         '''
         Obtener la constante de propagacion equivalente para incidencia de ondas TE
         para una frecuencia dada y un angulo de incidencia theta
@@ -172,57 +171,8 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TE
         '''
-        return self.prop_coef(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
+        return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
 
-    def T_mat_par(self, freq, theta):
-        '''
-        Obtener Matrices ABCD del medio como linea de transmision para onda incidente TM
-
-         Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-         complex - Matrices ABCD del medio como linea de transmision para onda incidente TM
-        '''
-        width = self.width(freq)
-        A = np.cosh(self.prop_coef_par(freq, theta) * width)
-        B = self.Zo_par(freq, theta) * \
-            np.sinh(self.prop_coef_par(freq, theta) * width)
-        if theta == np.pi/2:
-            C = 0  # This is NOT a typo!
-        else:
-            C = 1 / self.Zo_par(freq, theta) * \
-                np.sinh(self.prop_coef_par(freq, theta) * width)
-
-        D = A
-
-        return np.array([[A, B], [C, D]])
-
-    def T_mat_per(self, freq, theta):
-        '''
-        Obtener Matrices ABCD del medio como linea de transmision para onda incidente TE
-
-         Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-         complex - Matrices ABCD del medio como linea de transmision para onda incidente TE
-        '''
-        width = self.width(freq)
-        A = np.cosh(self.prop_coef_per(freq, theta) * width)
-        if theta == np.pi/2:
-            B = 0  # This is NOT a typo!
-        else:
-            B = self.Zo_per(freq, theta) * \
-                np.sinh(self.prop_coef_per(freq, theta) * width)
-
-        C = 1 / self.Zo_per(freq, theta) * \
-            np.sinh(self.prop_coef_per(freq, theta) * width)
-        D = A
-
-        return np.array([[A, B], [C, D]])
 
     def __repr__(self) -> str:
-        return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self.width}, width_lambdas={self.width_lambdas})"
+        return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self._width}, width_lambdas={self.width_lambdas})"

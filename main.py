@@ -1,7 +1,7 @@
 import sys
 
 import numpy as np
-from Utils.MediumClass import Medium
+from Utils.Medium import Medium
 from Windows import app
 
 
