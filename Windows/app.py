@@ -73,34 +73,33 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             freqs = np.logspace(np.log10(self.min_freq),
                                 np.log10(self.max_freq), 10000, base=10)
             trans = []
-            EA = []
+            ses = []
             ref = []
             # Verifico el tipo de polarizacion incidente
             if self.polarization_CB.currentText() == "TM":
 
                 for freq in freqs:
                     # Calculo del coef de reflexion total y las perdidas
-                    refl, losses = net.get_ref_and_loss_TM(freq)
+                    refl, se = net.get_ref_in_TM(freq), net.compute_shielding_effectiveness(freq)
 
                     # Apendeo los resultados para el vector de poynting
                     # para la reflexion es modulo cuadrado y para la transmision
                     # 1-|gamma|**2 agregando las perdidas
                     ref.append(np.abs(refl)**2)
-                    trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
-                    # print("freq:", freq, "  Loss:", losses, "ref:", refl)
-                    EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
+                    trans.append(1 - np.abs(refl)**2)
+                    #print("freq:", freq, "  Loss:", se, "ref:", refl)
+                    ses.append(se)
             else:
                 for freq in freqs:
-                    refl, losses = net.get_ref_and_loss_TE(freq)
+                    refl, se = net.get_ref_and_loss_TE(freq)
+                    
                     ref.append(np.abs(refl)**2)
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
-                    EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
+                    ses.append(se)
 
-            self.apant_plot.plot_efficiency(
-                freqs, EA)
-            self.coefs_plot.plot_coefs(
-                freqs, ref, trans)
+            self.apant_plot.plot_efficiency(freqs, ses)
+            self.coefs_plot.plot_coefs(freqs, ref, trans)
 
         self.tabWidget.setCurrentIndex(1)
 

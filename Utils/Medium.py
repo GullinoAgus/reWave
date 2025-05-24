@@ -69,7 +69,7 @@ class Medium():
         '''
         return np.sqrt(const.u / (self.e_comp(freq)), dtype=np.clongdouble)
 
-    def Zo_TM(self, freq, theta):
+    def eta_TM(self, freq, theta):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TM
         para una frecuencia dada y un angulo de incidencia theta
@@ -82,7 +82,7 @@ class Medium():
         '''
         return self.eta(freq) * np.cos(theta, dtype=np.longdouble)
 
-    def Zo_from_theta_i_TM(self, freq, theta_i, gamma_i):
+    def eta_from_theta_i_TM(self, freq, theta_i, gamma_i):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TM
         para una frecuencia dada y un angulo de incidencia theta
@@ -111,7 +111,7 @@ class Medium():
     def gamma_from_theta_i_TM(self, freq, theta_i, gamma_i):
         '''
         Obtener la constante de propagacion equivalente para incidencia de ondas TM
-        para una frecuencia dada y un angulo de incidencia theta
+        para una frecuencia dada y un angulo de incidencia theta en ese medio
         Args:
         freq : float - frecuencia de operacion en Hz
         theta : float - angulo de incidencia en radianes
@@ -134,7 +134,7 @@ class Medium():
         '''
         return self.eta(freq) / np.cos(theta, dtype=np.longdouble)
 
-    def Zo_from_theta_i_TE(self, freq, theta_i, gamma_i):
+    def eta_from_theta_i_TE(self, freq, theta_i, gamma_i):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TE
         para una frecuencia dada y un angulo de incidencia theta
@@ -175,4 +175,4 @@ class Medium():
 
 
     def __repr__(self) -> str:
-        return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self._width}, width_lambdas={self.width_lambdas})"
+        return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self._width}, width_lambdas={self._width_lambdas})"
