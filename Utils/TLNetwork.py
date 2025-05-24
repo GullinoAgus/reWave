@@ -84,7 +84,7 @@ class TLineNetwork():
         loss = 0
         for m1 in self._layer_list[-2:0:-1]:
             Zo = m1.Zo_from_theta_i_TE(freq, self._theta_i, gamma_i)
-            gammaL = m1.gamma_from_theta_i_TM(
+            gammaL = m1.gamma_from_theta_i_TE(
                 freq, self._theta_i, gamma_i) * m1.width(freq)
             a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
             ref_coef = (Zl-Zo)/(Zl+Zo)

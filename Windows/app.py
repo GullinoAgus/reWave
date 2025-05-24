@@ -59,9 +59,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 # y presentamos el modulo de los coeficientes de reflexion para incidencia TM y TE
                 net = TLineNetwork(layers, theta)
                 gamma_TM.append(
-                    np.abs(net.get_ref_and_loss_TM(freq))[0])
+                    np.abs(net.get_ref_and_loss_TM(freq))[0]**2)
                 gamma_TE.append(
-                    np.abs(net.get_ref_and_loss_TE(freq))[0])
+                    np.abs(net.get_ref_and_loss_TE(freq))[0]**2)
             self.apant_plot.plot_gammas(theta_i, gamma_TM, gamma_TE)
 
         else:  # Barrido de freq
