@@ -46,6 +46,22 @@ class TLineNetwork():
 
         return self.Gamma(eta_0, eta_eq)
     
+    def get_ref_in_TE(self, freq):
+         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
+        gamma_i = self._layer_list[0].gamma(freq)
+        eta_eq = self._layer_list[-1].eta_from_theta_i_TE(freq, self._theta_i, gamma_i)
+
+        # Para cada medio intermedio, calculo su impedancia de entrada equivalente
+        # teniendo en cuenta todas las capas anteriores.
+        for m1 in self._layer_list[-2:0:-1]:
+            eta_0 = m1.eta_from_theta_i_TE(freq, self._theta_i, gamma_i)
+            gammaL = m1.gamma_from_theta_i_TE(freq, self._theta_i, gamma_i) * m1.width(freq)
+            eta_eq = self.eta_in(eta_0, eta_eq, gammaL)
+
+        eta_0 = self._layer_list[0].eta_TE(freq, self._theta_i)
+
+        return self.Gamma(eta_0, eta_eq)
+    
     #a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
     #loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) /
     #                    (a * (1-np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
@@ -141,7 +157,7 @@ class TLineNetwork():
                                 (a * (1 - np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
             Zl = self.eta_in(Zo, Zl, gammaL)
         
-        Zo = self._layer_list[0].Zo_TE(freq, self._theta_i)
+        Zo = self._layer_list[0].eta_TE(freq, self._theta_i)
         return self.Gamma(Zo, Zl), loss
         
 

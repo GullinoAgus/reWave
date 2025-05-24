@@ -121,7 +121,7 @@ class Medium():
         '''
         return self.gamma(freq) * np.sqrt(1-(gamma_i/self.gamma(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble)
 
-    def Zo_TE(self, freq, theta):
+    def eta_TE(self, freq, theta):
         '''
         Obtener la impedancia caracteristica equivalente para incidencia de ondas TE
         para una frecuencia dada y un angulo de incidencia theta

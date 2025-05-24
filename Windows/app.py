@@ -91,7 +91,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     ses.append(se)
             else:
                 for freq in freqs:
-                    refl, se = net.get_ref_and_loss_TE(freq)
+                    refl, se = net.get_ref_in_TE(freq), net.compute_shielding_effectiveness(freq)
                     
                     ref.append(np.abs(refl)**2)
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
