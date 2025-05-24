@@ -1,5 +1,6 @@
 import os.path
 from PyQt6 import QtWidgets
+from PyQt6.QtCore import QEvent
 from matplotlib.ticker import AutoLocator, FuncFormatter, LinearLocator, StrMethodFormatter
 import numpy as np
 from matplotlib import scale, rcParams
@@ -41,21 +42,27 @@ class MplCanvas(FigureCanvas):
         self.axes.yaxis.set_major_formatter(self.y_formater)
         self.axes.format_coord = format_coord_piola
 
+    def resizeEvent(self, event):
+        self.fig.tight_layout()  
+        self.fig.canvas.draw()       
+        super().resizeEvent(event)
+
     def plot_efficiency(self, x, EA, ylims=None, xlims=None):
         self.axes.clear()
         self.axes.format_coord = format_coord_piola
 
-        line1 = self.axes.plot(x, EA)
+        line1 = self.axes.plot(x, EA, label="Eficiencia de apantallamiento")
         self.axes.yaxis.set_major_locator(self.y_locator)
         self.axes.yaxis.set_major_formatter(self.y_formater)
-        self.fig.tight_layout()
+        self.axes.legend()
+        self.fig.tight_layout(h_pad=0.5)
 
         self.dataCursor = mplcursors.cursor(line1, hover='Transient')
         self.axes.set_xscale('linear')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes.set_xlabel('Frecuencia [GHz]')
-        self.axes.set_ylabel('Eficiencia de apantallamiento [dB]')
+        self.axes.set_ylabel('Eficiencia [dB]')
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
         if hasattr(xlims, '__iter__'):
@@ -63,6 +70,8 @@ class MplCanvas(FigureCanvas):
         else:
             xlims = self.axes.get_xlim()
             self.axes.set_xlim(xlims[0], xlims[1])
+
+        
 
         self.fig.canvas.draw()
 
@@ -76,10 +85,14 @@ class MplCanvas(FigureCanvas):
         self.fig.subplots_adjust(hspace=0.)
 
         line1 = self.axes.plot(
-            x, ref, label="Coef. de Reflexion $\\vec{{S}}$")
+            x, ref, label="Coef. de Reflexión de $\\vec{{S}}$")
 
         line2 = self.axes2.plot(
-            x, trans, label="Coef. de Transmision de $\\vec{{S}}$")
+            x, trans, label="Coef. de Transmisión de $\\vec{{S}}$")
+        
+        self.axes.legend()
+        self.axes2.legend()
+
         yticks = self.axes.get_yticklabels()
         self.fig.tight_layout()
         yticks[-1].set_visible(False)
@@ -91,8 +104,8 @@ class MplCanvas(FigureCanvas):
         self.axes.grid(which='both')
         self.axes2.grid(which='both')
         self.axes2.set_xlabel('Frecuencia [GHz]')
-        self.axes.set_ylabel('Coeficientes de Reflexión [UA]')
-        self.axes2.set_ylabel('Coeficientes de Transmisión [UA]')
+        self.axes.set_ylabel('$|\\Gamma|$')
+        self.axes2.set_ylabel('$|\\tau|$')
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
         if hasattr(xlims, '__iter__'):
@@ -133,7 +146,7 @@ class MplCanvas(FigureCanvas):
     def init_plot_coefs(self):
         self.fig.clear()
         self.axes, self.axes2 = self.fig.subplots(
-            2, 1, sharex=True, gridspec_kw={'hspace': 0})
+            nrows=2, ncols=1, sharex=True, gridspec_kw={'hspace': 0})
         self.axes.get_yaxis().get_major_formatter()
         self.cursor = MultiCursor(canvas=self.fig.canvas, axes=[self.axes, self.axes2], useblit=True,
                                   color='gray', linestyle='--', linewidth=0.8, horizOn=True)
