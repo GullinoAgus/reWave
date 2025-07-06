@@ -31,20 +31,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.layer_list: list[LayerWidget] = []
 
     def next_plot(self):
-        self.plots.setCurrentIndex((self.plots.currentIndex() + 1) % self.plots.count())
-        pass
+        if self.freq_sweep_check.isChecked():
+            self.plots.setCurrentIndex((self.plots.currentIndex() + 1) % (self.plots.count()-1))
+        else:    
+            self.plots.setCurrentIndex((self.plots.currentIndex() + 1) % self.plots.count())
 
     def prev_plot(self):
-        self.plots.setCurrentIndex((self.plots.currentIndex() - 1) % self.plots.count())
-        pass
+        if self.freq_sweep_check.isChecked():
+            self.plots.setCurrentIndex((self.plots.currentIndex() - 1) % (self.plots.count()-1))
+        else:    
+            self.plots.setCurrentIndex((self.plots.currentIndex() - 1) % self.plots.count())
 
-    def calculate(self):
-        '''
-        Calculo de la eficiencia de apantallamiento o de 
-        los coeficientes en funcion de si es barrido de angulo o frecuencia
-        '''
-
-        # Se construye la lista de medios a partir de los widgets de capas
+    def create_layers(self):
         layers = []
         for layer in self.layer_list:
             if layer.isConnected():
@@ -55,11 +53,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             for i in range(self.period_input.value()):
                 layers.append(layers[1:length])
             layers.append(last_layer)
+        return layers
+
+    def calculate(self):
+        '''
+        Calculo de la eficiencia de apantallamiento o de 
+        los coeficientes en funcion de si es barrido de angulo o frecuencia
+        '''
+
+        # Se construye la lista de medios a partir de los widgets de capas
+        layers = self.create_layers()
 
         # Se verifica si se esta en modo barrido de angulo o frecuencia
         if self.freq_sweep_check.isChecked():   # Barrido de angulo
             self.apant_plot.hide()
             self.apant_plot.navToolBar.hide()
+
             # Valores de angulos a evaluar y freq
             theta_i = np.linspace(0, np.pi/2, 10000)
             freq = self.min_freq
@@ -81,10 +90,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 
             self.coef_1_plot.plot_coef_for_angle(theta_i, gamma_TM, gamma_TE, symbol="\\Gamma")
             self.coef_2_plot.plot_coef_for_angle(theta_i, tau_TM, tau_TE, symbol="\\tau")
-            
+            self.plots.setCurrentIndex(0)
+
         else:  # Barrido de freq
             self.apant_plot.show()
             self.apant_plot.navToolBar.show()
+
             # Armo la cadena de lineas de transmision equivalente
             net = TLineNetwork(layers, self.theta_i)
             # Lista de frecuencias a evaluar
@@ -106,10 +117,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     # para la reflexion es modulo cuadrado y para la transmision
                     # 1-|gamma|**2 agregando las perdidas
                     ref.append(np.abs(refl))
-                    ref2.append(np.abs(refl)**2)
+                    ref2.append(ref[-1]**2)
                     
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
-                    # print("freq:", freq, "  Loss:", losses, "ref:", refl)
+                    trans2.append(trans[-1]**2)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
             else:
                 for freq in freqs:
@@ -118,17 +129,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     ref.append(np.abs(refl))
                     ref2.append(np.abs(refl)**2)
 
-                    trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
+                    trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10))) #TODO: Este esta mal
+                    trans2.append(trans[-1]**2)
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
 
             self.coef_1_plot.plot_for_freq(
                 freqs, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión")
             self.coef_2_plot.plot_for_freq(
-                freqs, ref2, trans, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Potencia Reflejada", ax2_label="Potencia Transmitida")
-            
+                freqs, ref2, trans2, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Potencia Reflejada", ax2_label="Potencia Transmitida")
             self.apant_plot.plot_efficiency(
                 freqs, EA)
+            self.plots.setCurrentIndex(0)
             
         self.tabWidget.setCurrentIndex(1)
 

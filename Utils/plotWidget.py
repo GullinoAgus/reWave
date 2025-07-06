@@ -117,13 +117,21 @@ class MplCanvas(FigureCanvas):
         self.fig.canvas.draw()
 
     def plot_coef_for_angle(self, x, y1, y2, symbol, ylims=None, xlims=None):
+        
+        if self.axes2 is not None:
+            self.fig.clear()
+            self.axes = self.fig.add_subplot(111)
+            self.axes2 = None
+            self.cursor = Cursor(self.axes, useblit=True,
+                                color='gray', linestyle='--', linewidth=0.8)
+
         self.axes.clear()
         self.axes.format_coord = format_coord_piola
 
         line1 = self.axes.plot(
-            x*180/np.pi, y1, label=f"$|{symbol}_{{\\parallel}}|$")
+            x*180/np.pi, y1, label=f"$|{symbol}_{{\\parallel}}|^2$")
         line2 = self.axes.plot(
-            x*180/np.pi, y2, label=f"$|{symbol}_{{\\perp}}|$")
+            x*180/np.pi, y2, label=f"$|{symbol}_{{\\perp}}|^2$")
         self.axes.yaxis.set_major_locator(self.y_locator)
         self.axes.yaxis.set_major_formatter(self.y_formater)
         self.dataCursor = [mplcursors.cursor(
