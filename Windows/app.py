@@ -16,8 +16,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         locale.setlocale(locale.LC_ALL, '')
         self.setupUi(self)
         self.setWindowTitle("Calculador de apantallamiento")
-        self.apant_plot = MplCanvas(self.result_tab)
-        self.coefs_plot = MplCanvas(self.result_tab)
+        
+        self.coef_1_plot = MplCanvas(self.gammas_1)
+        self.coef_2_plot = MplCanvas(self.gammas_2)
+        self.apant_plot = MplCanvas(self.se)
+
         self.scientific_validator = QtGui.QDoubleValidator()
         # Set scientific notation for all input fields
         self.mu_input.setValidator(self.scientific_validator)
@@ -26,6 +29,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.width_input.setValidator(self.scientific_validator)
 
         self.layer_list: list[LayerWidget] = []
+
+    def next_plot(self):
+        self.plots.setCurrentIndex((self.plots.currentIndex() + 1) % self.plots.count())
+        pass
+
+    def prev_plot(self):
+        self.plots.setCurrentIndex((self.plots.currentIndex() - 1) % self.plots.count())
+        pass
 
     def calculate(self):
         '''
@@ -47,8 +58,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Se verifica si se esta en modo barrido de angulo o frecuencia
         if self.freq_sweep_check.isChecked():   # Barrido de angulo
-            self.coefs_plot.hide()
-            self.coefs_plot.navToolBar.hide()
+            self.coef_1_plot.hide()
+            self.coef_1_plot.navToolBar.hide()
             # Valores de angulos a evaluar y freq
             theta_i = np.linspace(0, np.pi/2, 10000)
             freq = self.min_freq
@@ -65,16 +76,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.apant_plot.plot_gammas(theta_i, gamma_TM, gamma_TE)
 
         else:  # Barrido de freq
-            self.coefs_plot.show()
-            self.coefs_plot.navToolBar.show()
+            self.coef_1_plot.show()
+            self.coef_1_plot.navToolBar.show()
             # Armo la cadena de lineas de transmision equivalente
             net = TLineNetwork(layers, self.theta_i)
             # Lista de frecuencias a evaluar
             freqs = np.logspace(np.log10(self.min_freq),
                                 np.log10(self.max_freq), 10000, base=10)
             trans = []
+            trans2 = []
             EA = []
             ref = []
+            ref2 = []
             # Verifico el tipo de polarizacion incidente
             if self.polarization_CB.currentText() == "TM":
 
@@ -85,23 +98,31 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     # Apendeo los resultados para el vector de poynting
                     # para la reflexion es modulo cuadrado y para la transmision
                     # 1-|gamma|**2 agregando las perdidas
-                    ref.append(np.abs(refl)**2)
+                    ref.append(np.abs(refl))
+                    ref2.append(np.abs(refl)**2)
+                    
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
             else:
                 for freq in freqs:
                     refl, losses = net.get_ref_and_loss_TE(freq)
-                    ref.append(np.abs(refl)**2)
+                    
+                    ref.append(np.abs(refl))
+                    ref2.append(np.abs(refl)**2)
+
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
 
+            self.coef_1_plot.plot_coefs(
+                freqs, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión")
+            self.coef_2_plot.plot_coefs(
+                freqs, ref2, trans, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Potencia Reflejada", ax2_label="Potencia Transmitida")
+            
             self.apant_plot.plot_efficiency(
                 freqs, EA)
-            self.coefs_plot.plot_coefs(
-                freqs, ref, trans)
-
+            
         self.tabWidget.setCurrentIndex(1)
 
     def freq_sweep_clicked(self, state):

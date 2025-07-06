@@ -75,7 +75,7 @@ class MplCanvas(FigureCanvas):
 
         self.fig.canvas.draw()
 
-    def plot_coefs(self, x, ref, trans, ylims=None, xlims=None):
+    def plot_coefs(self, x, ref, trans, ax1_label, ax2_label, y_label1, y_label2, ylims=None, xlims=None):
         if self.axes2 == None:
             self.init_plot_coefs()
         self.axes.clear()
@@ -85,10 +85,10 @@ class MplCanvas(FigureCanvas):
         self.fig.subplots_adjust(hspace=0.)
 
         line1 = self.axes.plot(
-            x, ref, label="Coef. de Reflexión de $\\vec{{S}}$")
+            x, ref, label=ax1_label)
 
         line2 = self.axes2.plot(
-            x, trans, label="Coef. de Transmisión de $\\vec{{S}}$")
+            x, trans, label=ax2_label)
         
         self.axes.legend()
         self.axes2.legend()
@@ -104,8 +104,8 @@ class MplCanvas(FigureCanvas):
         self.axes.grid(which='both')
         self.axes2.grid(which='both')
         self.axes2.set_xlabel('Frecuencia [GHz]')
-        self.axes.set_ylabel('$|\\Gamma|$')
-        self.axes2.set_ylabel('$|\\tau|$')
+        self.axes.set_ylabel(y_label1)
+        self.axes2.set_ylabel(y_label2)
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
         if hasattr(xlims, '__iter__'):

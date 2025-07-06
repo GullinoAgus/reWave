@@ -14,8 +14,8 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="0">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
        <number>0</number>
@@ -156,8 +156,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>1234</width>
-                <height>323</height>
+                <width>1214</width>
+                <height>326</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_2"/>
@@ -191,7 +191,7 @@
               <bool>true</bool>
              </property>
              <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::NoButtons</enum>
+              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
              </property>
              <property name="maximum">
               <double>90.000000000000000</double>
@@ -208,7 +208,7 @@
            <item row="4" column="2">
             <widget class="QSpinBox" name="period_input">
              <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::NoButtons</enum>
+              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
              </property>
              <property name="minimum">
               <number>1</number>
@@ -269,10 +269,10 @@
            <item row="1" column="2">
             <widget class="QDoubleSpinBox" name="min_freq_input">
              <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::NoButtons</enum>
+              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
              </property>
              <property name="correctionMode">
-              <enum>QAbstractSpinBox::CorrectToPreviousValue</enum>
+              <enum>QAbstractSpinBox::CorrectionMode::CorrectToPreviousValue</enum>
              </property>
              <property name="decimals">
               <number>3</number>
@@ -298,7 +298,7 @@
            <item row="2" column="2">
             <widget class="QDoubleSpinBox" name="max_freq_input">
              <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::NoButtons</enum>
+              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
              </property>
              <property name="decimals">
               <number>3</number>
@@ -364,7 +364,44 @@
        <attribute name="title">
         <string>Resultados</string>
        </attribute>
-       <layout class="QHBoxLayout" name="results_layout"/>
+       <layout class="QHBoxLayout" name="results_layout">
+        <item>
+         <widget class="QToolButton" name="prev_buttom">
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="arrowType">
+           <enum>Qt::ArrowType::LeftArrow</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="plots">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="gammas_1">
+           <layout class="QHBoxLayout" name="horizontalLayout_3"/>
+          </widget>
+          <widget class="QWidget" name="gammas_2">
+           <layout class="QHBoxLayout" name="horizontalLayout_4"/>
+          </widget>
+          <widget class="QWidget" name="se">
+           <layout class="QHBoxLayout" name="horizontalLayout_5"/>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="next_buttom">
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="arrowType">
+           <enum>Qt::ArrowType::RightArrow</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -380,8 +417,8 @@
    <slot>freq_sweep_clicked(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>469</x>
-     <y>363</y>
+     <x>1116</x>
+     <y>491</y>
     </hint>
     <hint type="destinationlabel">
      <x>807</x>
@@ -396,8 +433,8 @@
    <slot>calculate()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>442</x>
-     <y>559</y>
+     <x>453</x>
+     <y>699</y>
     </hint>
     <hint type="destinationlabel">
      <x>802</x>
@@ -412,12 +449,44 @@
    <slot>add_layer()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>193</x>
-     <y>514</y>
+     <x>216</x>
+     <y>654</y>
     </hint>
     <hint type="destinationlabel">
      <x>1</x>
      <y>526</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>prev_buttom</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>prev_plot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>27</x>
+     <y>377</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>4</x>
+     <y>221</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>next_buttom</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>next_plot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1245</x>
+     <y>374</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1274</x>
+     <y>274</y>
     </hint>
    </hints>
   </connection>
@@ -426,5 +495,7 @@
   <slot>freq_sweep_clicked(bool)</slot>
   <slot>calculate()</slot>
   <slot>add_layer()</slot>
+  <slot>next_plot()</slot>
+  <slot>prev_plot()</slot>
  </slots>
 </ui>
