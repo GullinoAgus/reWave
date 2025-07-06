@@ -58,13 +58,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Se verifica si se esta en modo barrido de angulo o frecuencia
         if self.freq_sweep_check.isChecked():   # Barrido de angulo
-            self.coef_1_plot.hide()
-            self.coef_1_plot.navToolBar.hide()
+            self.apant_plot.hide()
+            self.apant_plot.navToolBar.hide()
             # Valores de angulos a evaluar y freq
             theta_i = np.linspace(0, np.pi/2, 10000)
             freq = self.min_freq
             gamma_TM = []
             gamma_TE = []
+            tau_TM = []
+            tau_TE = []
+            
             for theta in theta_i:
                 # Para cada angulo calculamos nuevamente las lineas equivalente
                 # y presentamos el modulo de los coeficientes de reflexion para incidencia TM y TE
@@ -73,11 +76,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     np.abs(net.get_ref_and_loss_TM(freq))[0]**2)
                 gamma_TE.append(
                     np.abs(net.get_ref_and_loss_TE(freq))[0]**2)
-            self.apant_plot.plot_gammas(theta_i, gamma_TM, gamma_TE)
-
+                tau_TM.append(1 - gamma_TM[-1])
+                tau_TE.append(1 - gamma_TE[-1])
+                
+            self.coef_1_plot.plot_coef_for_angle(theta_i, gamma_TM, gamma_TE, symbol="\\Gamma")
+            self.coef_2_plot.plot_coef_for_angle(theta_i, tau_TM, tau_TE, symbol="\\tau")
+            
         else:  # Barrido de freq
-            self.coef_1_plot.show()
-            self.coef_1_plot.navToolBar.show()
+            self.apant_plot.show()
+            self.apant_plot.navToolBar.show()
             # Armo la cadena de lineas de transmision equivalente
             net = TLineNetwork(layers, self.theta_i)
             # Lista de frecuencias a evaluar
@@ -115,9 +122,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)
 
-            self.coef_1_plot.plot_coefs(
+            self.coef_1_plot.plot_for_freq(
                 freqs, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión")
-            self.coef_2_plot.plot_coefs(
+            self.coef_2_plot.plot_for_freq(
                 freqs, ref2, trans, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Potencia Reflejada", ax2_label="Potencia Transmitida")
             
             self.apant_plot.plot_efficiency(

@@ -75,7 +75,7 @@ class MplCanvas(FigureCanvas):
 
         self.fig.canvas.draw()
 
-    def plot_coefs(self, x, ref, trans, ax1_label, ax2_label, y_label1, y_label2, ylims=None, xlims=None):
+    def plot_for_freq(self, x, ref, trans, ax1_label, ax2_label, y_label1, y_label2, ylims=None, xlims=None):
         if self.axes2 == None:
             self.init_plot_coefs()
         self.axes.clear()
@@ -116,14 +116,14 @@ class MplCanvas(FigureCanvas):
 
         self.fig.canvas.draw()
 
-    def plot_gammas(self, x, y1, y2, ylims=None, xlims=None):
+    def plot_coef_for_angle(self, x, y1, y2, symbol, ylims=None, xlims=None):
         self.axes.clear()
         self.axes.format_coord = format_coord_piola
 
         line1 = self.axes.plot(
-            x*180/np.pi, y1, label="$|\\Gamma_{{\\parallel}}|$")
+            x*180/np.pi, y1, label=f"$|{symbol}_{{\\parallel}}|$")
         line2 = self.axes.plot(
-            x*180/np.pi, y2, label="$|\\Gamma_{{\\perp}}|$")
+            x*180/np.pi, y2, label=f"$|{symbol}_{{\\perp}}|$")
         self.axes.yaxis.set_major_locator(self.y_locator)
         self.axes.yaxis.set_major_formatter(self.y_formater)
         self.dataCursor = [mplcursors.cursor(
@@ -131,7 +131,7 @@ class MplCanvas(FigureCanvas):
         self.axes.grid(which='both')
         self.axes.legend()
         self.axes.set_xlabel('Angulo de incidencia [$\\degree$]')
-        self.axes.set_ylabel('$|\\Gamma|$')
+        self.axes.set_ylabel(f"$|{symbol}|$")
         self.fig.tight_layout()
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
