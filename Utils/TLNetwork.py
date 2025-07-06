@@ -2,12 +2,13 @@
 import numpy as np
 
 from Utils.Medium import Medium
+import scipy.constants as const
 
 class TLineNetwork():
 
     def __init__(self, layer_list: list[Medium], theta_i: float):
         # Calculo de la lista de medios con sus angulos de propagacion
-        self._theta_i = theta_i
+        self._theta_1 = theta_i
         self._layer_list = layer_list
 
         pass
@@ -30,7 +31,7 @@ class TLineNetwork():
         '''
         return (Zl-Zo)/(Zl+Zo)
 
-    def get_ref_and_loss_TM(self, freq):
+    def get_reflexion_and_SE_TM(self, freq):
         '''
         Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
         para ondas TM
@@ -40,72 +41,86 @@ class TLineNetwork():
         tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
 
         '''
+        q_i = []
+        k_i = []
+        d_i = []
 
         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
-        gamma_i = self._layer_list[0].gamma(freq)
-        Zl = self._layer_list[-1].Zo_from_theta_i_TM(
-            freq, self._theta_i, gamma_i)
-        loss = 0
+        k_1 = self._layer_list[0].k(freq)
+        Zeq = self._layer_list[-1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+
+        #p calculation
+        Zis = np.array([layer.Zo_from_theta_i_TE(freq, self._theta_1, k_1) for layer in self._layer_list])
+        num_p = 2 * self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1) * np.prod(Zis[1:-1] * 2)
+        den_p = (Zis[0] + Zis[2]) * (Zis[-1] + Zis[2]) * np.prod(Zis[2:-2] + Zis[3:-1])
+        p = num_p/den_p
 
         # Para cada medio intermedio, calculo su impedancia de entrada equivalente
         # teniendo en cuenta todas las capas anteriores.
-        # Tambien se van acumulando las perdidas de cada medio.
-        for m1 in self._layer_list[-2:0:-1]:
-            Zo = m1.Zo_from_theta_i_TM(freq, self._theta_i, gamma_i)
-            gammaL = m1.gamma_from_theta_i_TM(
-                freq, self._theta_i, gamma_i) * m1.width(freq)
+        for i, mi in enumerate(self._layer_list[-2:0:-1]):
+            Zo = mi.Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+            Zo_next = self._layer_list[i+1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+            gammaL = mi.gamma(freq) * mi.width(freq)
             
-            # Calculo de perdidas de la capa actual
-            a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
-            ref_coef = (Zl-Zo)/(Zl+Zo)
-            loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) /
-                                (a * (1-np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
-
             # Calculo de la impedancia equivalente
-            Zl = self.Zin(Zo, Zl, gammaL)
+            Zeq = self.Zin(Zo, Zeq, gammaL)
+            q_i.append(self.Gamma(Zo, Zo_next) * self.Gamma(Zo, Zeq))
+            k_i.append(mi.k(freq))
+            d_i.append(mi.width(freq))
+            
+        Zo = self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+
+        q_i = np.array(q_i)
+        k_i = np.array(k_i)
+        d_i = np.array(d_i)
+        exp_jkdi = np.exp(1j * k_i * d_i)
+        exp_m2jkdi = np.exp(-2j * k_i * d_i)
+        SE = 20 * np.log10(np.abs(np.prod(exp_jkdi * (1 - q_i * exp_m2jkdi))/p))
+
+        return self.Gamma(Zo, Zeq), SE
 
 
-        Zo = self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_i, gamma_i)
-
-        return self.Gamma(Zo, Zl), loss
-
-
-    def get_ref_and_loss_TE(self, freq):
+    def get_reflexion_TE(self, freq):
         '''
         Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
-        para ondas TE. Para funcionamiento ver calc_total_equiv_impedance_and_loss_par
+        para ondas TE
 
          freq : float - frecuencia de operacion en Hz
         Returns:
         tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
-        '''
-        gamma_i = self._layer_list[0].gamma(freq)
-        Zl = self._layer_list[-1].Zo_from_theta_i_TE(
-            freq, self._theta_i, gamma_i)
-        loss = 0
-        for m1 in self._layer_list[-2:0:-1]:
-            Zo = m1.Zo_from_theta_i_TE(freq, self._theta_i, gamma_i)
-            gammaL = m1.gamma_from_theta_i_TE(
-                freq, self._theta_i, gamma_i) * m1.width(freq)
-            a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
-            ref_coef = (Zl-Zo)/(Zl+Zo)
-            loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) /
-                                (a * (1 - np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
-            Zl = self.Zin(Zo, Zl, gammaL)
-        
-        Zo = self._layer_list[0].Zo_from_theta_i_TE(freq, self._theta_i, gamma_i)
-        
-        return self.Gamma(Zo, Zl), loss
-        
 
+        '''
+        # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
+        k_1 = self._layer_list[0].k(freq)
+        Zeq = self._layer_list[-1].Zo_from_theta_i_TE(freq, self._theta_1, k_1)
+
+        # Para cada medio intermedio, calculo su impedancia de entrada equivalente
+        # teniendo en cuenta todas las capas anteriores.
+        for mi in self._layer_list[-2:0:-1]:
+            Zo = mi.Zo_from_theta_i_TE(freq, self._theta_1, k_1)
+            gammaL = mi.gamma(freq) * mi.width(freq)
+            
+            # Calculo de la impedancia equivalente
+            Zeq = self.Zin(Zo, Zeq, gammaL)
+
+        Zo = self._layer_list[0].Zo_from_theta_i_TE(freq, self._theta_1, k_1)
+
+        return self.Gamma(Zo, Zeq)
+    
+    def k_x(self, freq, m1: Medium, mi: Medium):
+
+        k_0 = 2 * np.pi * freq * np.sqrt(const.mu_0 * const.epsilon_0, dtype=np.clongdouble)
+        k_x = k_0 * np.sqrt((mi.ur * mi.e_comp(freq) - m1.ur * m1.e_comp(freq) * (np.sin(self.theta_i)**2))//const.epsilon_0, dtype=np.clongdouble)
+        return k_x
+    
     @property
     def theta_i(self):
-        return self._theta_i
+        return self._theta_1
 
     @theta_i.setter
     def theta_i(self, value):
         if 0 <= value <= np.pi/2:
-            self._theta_i = value
+            self._theta_1 = value
 
     @property
     def theta_r(self):
@@ -119,7 +134,9 @@ if __name__ == "__main__":
 
     med_list = [m1, m2, m4]
     net = TLineNetwork(med_list, 0)
-    print(net.calc_total_reflection_coef_par(100e6))
+    freqs = np.logspace(np.log10(1), np.log10(10E9), 10000, base=10)
+
+    print(net.get_reflexion_and_SE_TM())
     pass
 
 
@@ -130,5 +147,8 @@ Separar coef de transmision y reflexion del poynting
 
 Agregar coef de transmision del poynting en barrido de angulo para perp y par
 
+Sobre las clases:
+
+2_ondas, pag. 34-> d = 9,375mm
 
 '''
