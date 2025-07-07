@@ -184,4 +184,4 @@ class Medium():
 
 
     def __repr__(self) -> str:
-        return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self._width}, width_lambdas={self.width_lambdas})"
+        return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self._width}, width_lambdas={self._width_lambdas})"

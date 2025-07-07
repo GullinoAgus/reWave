@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         layers = self.create_layers()
 
         trans = []
-        trans2 = []
+        T = []
         EA = [] # Esto es por definicion Ei/Et
         ref = []
         R = []
@@ -76,12 +76,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 net = TLineNetwork(layers, theta)
                 if self.polarization_CB.currentText() == "TM":
                     refl, se = net.get_reflexion_and_SE_TM(freq)
+                    transmitividad = 10**(-se/20) 
                 else:
                     refl = net.get_reflexion_TE(freq)
                     se = net.get_se_TE(freq)
     
                 ref.append(np.abs(refl)) #Coef. de reflexion
-                R.append(np.abs(refl)**2) # Fraccion de potencia reflejada
+                trans.append(np.sqrt(transmitividad))
+                T.append(transmitividad)
+                R.append(np.abs(ref[-1])**2) # Fraccion de potencia reflejada
                 EA.append(se)
 
         else:  # Barrido de freq
@@ -97,17 +100,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 if self.polarization_CB.currentText() == "TM":
                     # Calculo del coef de reflexion total y las perdidas
                     refl, se = net.get_reflexion_and_SE_TM(freq)
+                    transmitividad = 10**(-se/20) 
                 else:
                     refl = net.get_reflexion_TE(freq)
                     
                 ref.append(np.abs(refl))
-                R.append(np.abs(refl)**2)
+                trans.append(np.sqrt(transmitividad))
+                T.append(transmitividad)
+                R.append(np.abs(ref[-1])**2)
                 EA.append(se)
 
         self.coef_1_plot.plot_for_freq(
-            freqs, ref, ref, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión")
+            freqs, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión")
         self.coef_2_plot.plot_for_freq(
-            freqs, R, R, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida")
+            freqs, R, T, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida")
         self.apant_plot.plot_efficiency(freqs, EA)
 
         self.plots.setCurrentIndex(0)

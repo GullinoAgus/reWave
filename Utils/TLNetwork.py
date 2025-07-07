@@ -41,44 +41,81 @@ class TLineNetwork():
         tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
 
         '''
-        q_i = []
-        k_i = []
-        d_i = []
+        se = 0
 
         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
         k_1 = self._layer_list[0].k(freq)
         Zeq = self._layer_list[-1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
 
         #p calculation
-        Zis = np.array([layer.Zo_from_theta_i_TE(freq, self._theta_1, k_1) for layer in self._layer_list])
+        Zis = np.array([layer.Zo_from_theta_i_TM(freq, self._theta_1, k_1) for layer in self._layer_list])
         num_p = 2 * self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1) * np.prod(Zis[1:-1] * 2)
-        den_p = (Zis[0] + Zis[2]) * (Zis[-1] + Zis[2]) * np.prod(Zis[2:-2] + Zis[3:-1])
+        den_p = (Zis[0] + Zis[1]) * (Zis[-1] + Zis[-2])
+        if len(self._layer_list) > 3:
+            den_p *= np.prod(Zis[1:-2] + Zis[2:-1])
         p = num_p/den_p
 
         # Para cada medio intermedio, calculo su impedancia de entrada equivalente
         # teniendo en cuenta todas las capas anteriores.
-        for i, mi in enumerate(self._layer_list[-2:0:-1]):
-            Zo = mi.Zo_from_theta_i_TM(freq, self._theta_1, k_1)
-            Zo_next = self._layer_list[i+1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+        for mi in self._layer_list[-2:0:-1]:
+            Zi = mi.Zo_from_theta_i_TM(freq, self._theta_1, k_1)
             gammaL = mi.gamma(freq) * mi.width(freq)
+            Zeq = self.Zin(Zi, Zeq, gammaL)
+        Zi = self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+        Gamma_in = self.Gamma(Zi, Zeq)
+
+        q_i = self.get_qi(freq, k_1)
+        for i, layer in enumerate(self._layer_list[1:-1]):
+            k_i = self.k_x(freq, self._layer_list[0], layer)
+            d_i = mi.width(freq)
+            exp_jkdi = np.exp(1j * k_i * d_i)
+            exp_m2jkdi = np.exp(-2j * k_i * d_i)
+            se *= exp_jkdi * (1 - q_i[i] * exp_m2jkdi)
             
-            # Calculo de la impedancia equivalente
-            Zeq = self.Zin(Zo, Zeq, gammaL)
-            q_i.append(self.Gamma(Zo, Zo_next) * self.Gamma(Zo, Zeq))
-            k_i.append(mi.k(freq))
-            d_i.append(mi.width(freq))
-            
-        Zo = self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+        SE = 20 * np.log10(np.abs(se/p))
 
-        q_i = np.array(q_i)
-        k_i = np.array(k_i)
-        d_i = np.array(d_i)
-        exp_jkdi = np.exp(1j * k_i * d_i)
-        exp_m2jkdi = np.exp(-2j * k_i * d_i)
-        SE = 20 * np.log10(np.abs(np.prod(exp_jkdi * (1 - q_i * exp_m2jkdi))/p))
+        return Gamma_in, SE
 
-        return self.Gamma(Zo, Zeq), SE
+    def get_Zdi_TM(self, idx, freq, k_1, Zdi_list):
 
+        # Si estamos en la ultima capa del shield
+        if idx == len(self._layer_list) - 2:
+            Zo = self._layer_list[idx].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+            Zdi_list.append(Zo)
+            return Zo, Zdi_list
+        
+        Zi1 = self._layer_list[idx+1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+        Zi2 = self._layer_list[idx+2].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+        coskdi = np.cos(self.k_x(freq, self._layer_list[0], self._layer_list[idx+1]))
+        senkdi = np.sin(self.k_x(freq, self._layer_list[0], self._layer_list[idx+1]))
+        Zdi, Zdi_list = self.get_Zdi_TM(idx+1, freq, k_1, Zdi_list)
+
+        Zdi = Zi1 * ((Zdi * coskdi + 1j * Zi1 * senkdi)
+                     /(Zi2 * coskdi + 1j * Zdi * senkdi))
+        
+        return Zdi, Zdi_list.append(Zdi)
+
+    def get_qi(self, freq, k_1):
+
+        Zdi_list = []
+        qi_list = []
+
+        _, Zdi_list = self.get_Zdi_TM(1, freq, k_1, Zdi_list)
+        print(Zdi_list)
+        for i, _ in enumerate(self._layer_list[1:-1]):
+            Zi = self._layer_list[i+1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+            Zim1 = self._layer_list[i].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+            Zdi = Zdi_list[i]
+
+            print(Zi, Zim1, Zdi)
+
+            qi = self.Gamma(Zim1, Zi) * self.Gamma(Zdi, Zi)
+            print(qi)
+            qi_list.append(qi)
+            print(qi_list)
+
+        return qi_list
+        
 
     def get_reflexion_TE(self, freq):
         '''
@@ -110,7 +147,7 @@ class TLineNetwork():
     def k_x(self, freq, m1: Medium, mi: Medium):
 
         k_0 = 2 * np.pi * freq * np.sqrt(const.mu_0 * const.epsilon_0, dtype=np.clongdouble)
-        k_x = k_0 * np.sqrt((mi.ur * mi.e_comp(freq) - m1.ur * m1.e_comp(freq) * (np.sin(self.theta_i)**2))//const.epsilon_0, dtype=np.clongdouble)
+        k_x = k_0 * np.sqrt((mi.ur * mi.e_comp(freq) - m1.ur * m1.e_comp(freq) * (np.sin(self.theta_i)**2))/const.epsilon_0, dtype=np.clongdouble)
         return k_x
     
     @property
