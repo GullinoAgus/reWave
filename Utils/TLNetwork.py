@@ -63,7 +63,7 @@ class TLineNetwork():
             Zeq = self.Zin(Zi, Zeq, gammaL)
             a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
             ref_coef = self.Gamma(Zi, Zeq)
-            loss += 10*np.log10(((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) / (a * (1 - np.abs(ref_coef, dtype=np.longdouble)**2))**(1/2)), dtype=np.longdouble)
+            loss += 10*np.log10(((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) / (a * (1 - np.abs(ref_coef, dtype=np.longdouble)**2))), dtype=np.longdouble)/2
         Zi = self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
         Gamma_in = self.Gamma(Zi, Zeq)
         
@@ -75,7 +75,7 @@ class TLineNetwork():
             exp_m2jkdi = np.exp(-2j * k_i * d_i)
             se *= exp_jkdi * (1 - q_i[i] * exp_m2jkdi)
             
-        SE = 20 * np.log10(np.abs(se/p))
+        SE = 20 * np.log10(np.abs(se/1))
 
         return Gamma_in, loss, SE
     
