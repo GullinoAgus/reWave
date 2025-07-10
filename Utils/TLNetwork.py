@@ -47,7 +47,7 @@ class TLineNetwork():
 
         # Para cada medio intermedio, calculo su impedancia de entrada equivalente
         # teniendo en cuenta todas las capas anteriores.
-        for mi in self._layer_list[-2:0:-1]:
+        for mi in reversed(self._layer_list[1:-1]):
             Zi = mi.Zo_from_theta_i_TM(freq, self._theta_1, k_1)
             gammaL = mi.gamma(freq) * mi.width(freq)
             Zeq = self.Zin(Zi, Zeq, gammaL)
@@ -64,11 +64,11 @@ class TLineNetwork():
 
         for mi in reversed(self._layer_list[1:-1]):
             Ti = mi.T_TM(freq, self.theta_i, k_1)  # Get ABCD matrix
-            T_total = Ti @ T_total  # Matrix multiply: T_i * T_total
+            T_total = T_total @ Ti    # Matrix multiply: T_i * T_total
 
         A, B = T_total[0, 0], T_total[0, 1]
         
-        return -20 * np.log10(A + B/eta_s)
+        return -20 * np.log10(np.abs(A + B/eta_s))
 
     def get_reflexion_TE(self, freq):
         '''

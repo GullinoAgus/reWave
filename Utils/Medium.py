@@ -194,14 +194,14 @@ class Medium():
          complex - Matrices ABCD del medio como linea de transmision para onda incidente TM
         '''
         width = self.width(freq)
-        A = np.cosh(self.k(freq) * width)
+        A = np.cos(self.k(freq) * width)
         B = -1j * self.Zo_from_theta_i_TM(freq, theta_i, k_1) * \
-            np.sinh(self.k(freq) * width)
+            np.sin(self.k(freq) * width)
         if theta_i == np.pi/2:
             C = 0  # This is NOT a typo!
         else:
             C = -1j / self.Zo_from_theta_i_TM(freq, theta_i, k_1) * \
-                np.sinh(self.k(freq) * width)
+                np.sin(self.k(freq) * width)
 
         D = A
 
