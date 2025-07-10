@@ -94,7 +94,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 for freq in freqs:
                     refl, losses = net.calc_total_reflection_coef_and_losses_per(
                         freq)
-                    ref.append(np.abs(refl)**2)
+                    ref.append(np.abs(refl))
                     trans.append((1 - np.abs(refl)**2) * 10**(-(losses/10)))
                     # print("freq:", freq, "  Loss:", losses, "ref:", refl)
                     EA.append(-10*np.log10(1 - np.abs(refl)**2) + losses)

@@ -91,8 +91,8 @@ class MplCanvas(FigureCanvas):
         self.axes.grid(which='both')
         self.axes2.grid(which='both')
         self.axes2.set_xlabel('Frecuencia [GHz]')
-        self.axes.set_ylabel('Coeficientes de Reflexión [UA]')
-        self.axes2.set_ylabel('Coeficientes de Transmisión [UA]')
+        self.axes.set_ylabel('<S> Reflejado')
+        self.axes2.set_ylabel('<S> Transmitido')
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
         if hasattr(xlims, '__iter__'):

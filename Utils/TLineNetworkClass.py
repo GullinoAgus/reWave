@@ -62,10 +62,10 @@ class TLineNetwork():
                 freq, self._theta_i, gamma_i) * m1.width(freq)
 
             # Calculo de perdidas de la capa actual
-            a = np.exp(2*np.real(gammaL), dtype=np.float128)
+            a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
             ref_coef = (Zl-Zo)/(Zl+Zo)
-            loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.float128)**2) /
-                                (a * (1-np.abs(ref_coef, dtype=np.float128)**2)), dtype=np.float128)
+            loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) /
+                                (a * (1-np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
 
             # Calculo de la impedancia equivalente
             Zl = self.calc_equiv_impedance(Zo, Zl, gammaL)
@@ -104,10 +104,10 @@ class TLineNetwork():
             Zo = m1.Zo_from_theta_i_per(freq, self._theta_i, gamma_i)
             gammaL = m1.prop_coef_from_theta_i_par(
                 freq, self._theta_i, gamma_i) * m1.width(freq)
-            a = np.exp(2*np.real(gammaL), dtype=np.float128)
+            a = np.exp(2*np.real(gammaL), dtype=np.longdouble)
             ref_coef = (Zl-Zo)/(Zl+Zo)
-            loss += 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.float128)**2) /
-                                (a * (1 - np.abs(ref_coef, dtype=np.float128)**2)), dtype=np.float128)
+            loss += 1/2 * 10*np.log10((a**2 - np.abs(ref_coef, dtype=np.longdouble)**2) /
+                                (a * (1 - np.abs(ref_coef, dtype=np.longdouble)**2)), dtype=np.longdouble)
             Zl = self.calc_equiv_impedance(Zo, Zl, gammaL)
         return Zl, loss
 
