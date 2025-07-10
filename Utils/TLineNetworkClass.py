@@ -29,7 +29,7 @@ class TLineNetwork():
         gammaL : complex float - const de propagacion * espesor del medio.
 
         '''
-        return Zo*(Zl+Zo*np.tanh(gammaL, dtype=np.complex256))/(Zo+Zl*np.tanh(gammaL, dtype=np.complex256))
+        return Zo*(Zl+Zo*np.tanh(gammaL, dtype=np.clongdouble))/(Zo+Zl*np.tanh(gammaL, dtype=np.clongdouble))
 
     def calc_reflection_coeff(self, Zo, Zl):
         '''

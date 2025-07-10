@@ -56,7 +56,7 @@ class Medium():
         Returns:
         complex - coeficiente de propagacion complejo del medio
         '''
-        return np.sqrt(1j * 2 * np.pi * freq * self.u * (self.sigma + 1j * 2 * np.pi * freq * self.e), dtype=np.complex256)
+        return np.sqrt(1j * 2 * np.pi * freq * self.u * (self.sigma + 1j * 2 * np.pi * freq * self.e), dtype=np.clongdouble)
 
     def eta(self, freq):
         '''
@@ -68,7 +68,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica del medio
         '''
-        return np.sqrt(self.u / (self.e_comp(freq)), dtype=np.complex256)
+        return np.sqrt(self.u / (self.e_comp(freq)), dtype=np.clongdouble)
 
     def Zo_par(self, freq, theta):
         '''
@@ -94,7 +94,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TM
         '''
-        return self.eta(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i))**2, dtype=np.complex256)
+        return self.eta(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i))**2, dtype=np.clongdouble)
 
     def prop_coef_par(self, freq, theta):
         '''
@@ -120,7 +120,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TM
         '''
-        return self.prop_coef(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
+        return self.prop_coef(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.clongdouble)
 
     def Zo_per(self, freq, theta):
         '''
@@ -146,7 +146,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TE
         '''
-        return self.eta(freq) / np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
+        return self.eta(freq) / np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.clongdouble)
 
     def prop_coef_per(self, freq, theta):
         '''
@@ -172,7 +172,7 @@ class Medium():
         Returns:
         complex - constante de propagacion equivalente para incidencia de ondas TE
         '''
-        return self.prop_coef(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.complex256)
+        return self.prop_coef(freq) * np.sqrt(1-(gamma_i/self.prop_coef(freq)*np.sin(theta_i, dtype=np.float128))**2, dtype=np.clongdouble)
 
     def T_mat_par(self, freq, theta):
         '''
