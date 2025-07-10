@@ -42,6 +42,7 @@ class TLineNetwork():
 
         '''
         se = 0
+        Zieq = []
 
         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
         k_1 = self._layer_list[0].k(freq)
@@ -50,9 +51,7 @@ class TLineNetwork():
         #p calculation
         Zis = np.array([layer.Zo_from_theta_i_TM(freq, self._theta_1, k_1) for layer in self._layer_list])
         num_p = 2 * self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1) * np.prod(Zis[1:-1] * 2)
-        den_p = (Zis[0] + Zis[1]) * (Zis[-1] + Zis[-2])
-        if len(self._layer_list) > 3:
-            den_p *= np.prod(Zis[1:-2] + Zis[2:-1])
+        den_p *= np.prod(Zis[:-1] + Zis[1:])
         p = num_p/den_p
 
         # Para cada medio intermedio, calculo su impedancia de entrada equivalente
@@ -61,10 +60,11 @@ class TLineNetwork():
             Zi = mi.Zo_from_theta_i_TM(freq, self._theta_1, k_1)
             gammaL = mi.gamma(freq) * mi.width(freq)
             Zeq = self.Zin(Zi, Zeq, gammaL)
+            Zieq.append(Zeq)
         Zi = self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
         Gamma_in = self.Gamma(Zi, Zeq)
 
-        q_i = self.get_qi(freq, k_1)
+        q_i = self.get_q(freq, k_1)
         for i, layer in enumerate(self._layer_list[1:-1]):
             k_i = self.k_x(freq, self._layer_list[0], layer)
             d_i = mi.width(freq)
@@ -75,7 +75,7 @@ class TLineNetwork():
         SE = 20 * np.log10(np.abs(se/p))
 
         return Gamma_in, SE
-
+    
     def get_Zdi_TM(self, idx, freq, k_1, Zdi_list):
 
         # Si estamos en la ultima capa del shield
@@ -95,13 +95,15 @@ class TLineNetwork():
         
         return Zdi, Zdi_list.append(Zdi)
 
-    def get_qi(self, freq, k_1):
+    def get_q(self, freq, k_1, i):
 
         Zdi_list = []
         qi_list = []
 
         _, Zdi_list = self.get_Zdi_TM(1, freq, k_1, Zdi_list)
-        print(Zdi_list)
+
+        for 
+        
         for i, _ in enumerate(self._layer_list[1:-1]):
             Zi = self._layer_list[i+1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
             Zim1 = self._layer_list[i].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
