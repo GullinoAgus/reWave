@@ -31,7 +31,7 @@ class TLineNetwork():
         '''
         return (Zl-Zo)/(Zl+Zo)
 
-    def get_reflexion_and_SE_TM(self, freq):
+    def get_reflexion_TM(self, freq):
         '''
         Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
         para ondas TM
@@ -41,18 +41,9 @@ class TLineNetwork():
         tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
 
         '''
-        se = 0
-        den_p = 1
-
         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
         k_1 = self._layer_list[0].k(freq)
         Zeq = self._layer_list[-1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
-
-        #p calculation
-        Zis = np.array([layer.Zo_from_theta_i_TM(freq, self._theta_1, k_1) for layer in self._layer_list])
-        num_p = 2 * self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1) * np.prod(Zis[1:-1] * 2)
-        den_p *= np.prod(Zis[:-1] + Zis[1:])
-        p = num_p/den_p
 
         # Para cada medio intermedio, calculo su impedancia de entrada equivalente
         # teniendo en cuenta todas las capas anteriores.
@@ -62,56 +53,22 @@ class TLineNetwork():
             Zeq = self.Zin(Zi, Zeq, gammaL)
         Zi = self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
         Gamma_in = self.Gamma(Zi, Zeq)
-        
-        q_i = self.get_qi(freq, k_1)
-        for i, layer in enumerate(self._layer_list[1:-1]):
-            k_i = self.k_x(freq, self._layer_list[0], layer)
-            d_i = mi.width(freq)
-            exp_jkdi = np.exp(1j * k_i * d_i)
-            exp_m2jkdi = np.exp(-2j * k_i * d_i)
-            se *= exp_jkdi * (1 - q_i[i] * exp_m2jkdi)
-            
-        SE = 20 * np.log10(np.abs(se/p))
 
-        return Gamma_in, SE
+        return Gamma_in
     
-    def get_Zdi_TM(self, idx, freq, k_1, Zdi_list):
-
-        # Si estamos en la ultima capa del shield
-        if idx == len(self._layer_list) - 2:
-            Zo = self._layer_list[idx].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
-            Zdi_list.append(Zo)
-            return Zo, Zdi_list
+    def get_se_TM(self, freq):
         
-        Zi1 = self._layer_list[idx+1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
-        Zi2 = self._layer_list[idx+2].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
-        coskdi = np.cos(self.k_x(freq, self._layer_list[0], self._layer_list[idx+1]))
-        senkdi = np.sin(self.k_x(freq, self._layer_list[0], self._layer_list[idx+1]))
-        Zdi, Zdi_list = self.get_Zdi_TM(idx+1, freq, k_1, Zdi_list)
+        T_total = np.identity(2, dtype=np.clongdouble)
+        k_1 = self._layer_list[0].k(freq)
+        eta_s = self._layer_list[-1].eta(freq)
 
-        Zdi = Zi1 * ((Zdi * coskdi + 1j * Zi1 * senkdi)
-                     /(Zi2 * coskdi + 1j * Zdi * senkdi))
+        for mi in reversed(self._layer_list[1:-1]):
+            Ti = mi.T_TM(freq, self.theta_i, k_1)  # Get ABCD matrix
+            T_total = Ti @ T_total  # Matrix multiply: T_i * T_total
+
+        A, B = T_total[0, 0], T_total[0, 1]
         
-        return Zdi, Zdi_list.append(Zdi)
-
-    def get_qi(self, freq, k_1):
-
-        Zdi_list = []
-        qi_list = []
-
-        #_, _ = self.get_Zdi_TM(1, freq, k_1, Zdi_list)
-
-        if Zdi_list:
-            for i, _ in enumerate(self._layer_list[1:-1]):
-                Zi = self._layer_list[i+1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
-                Zim1 = self._layer_list[i].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
-                Zdi = Zdi_list[i]
-                qi = self.Gamma(Zim1, Zi) * self.Gamma(Zdi, Zi)
-                qi_list.append(qi)
-
-        qi_list = [1]*len(self._layer_list[1:-1])
-        return qi_list
-        
+        return -20 * np.log10(A + B/eta_s)
 
     def get_reflexion_TE(self, freq):
         '''
@@ -169,7 +126,7 @@ if __name__ == "__main__":
     net = TLineNetwork(med_list, 0)
     freqs = np.logspace(np.log10(1), np.log10(10E9), 10000, base=10)
 
-    print(net.get_reflexion_and_SE_TM())
+    print(net.get_reflexion_TM())
     pass
 
 

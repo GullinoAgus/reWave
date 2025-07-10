@@ -75,7 +75,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             for theta in theta_i:
                 net = TLineNetwork(layers, theta)
                 if self.polarization_CB.currentText() == "TM":
-                    refl, se = net.get_reflexion_and_SE_TM(freq)
+                    refl = net.get_reflexion_TM(freq)
+                    se = net.get_se_TM(freq)
                     transmitividad = 10**(-se/10)
                 else:
                     refl = net.get_reflexion_TE(freq)
@@ -99,7 +100,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             for freq in freqs:
                 if self.polarization_CB.currentText() == "TM":
                     # Calculo del coef de reflexion total y las perdidas
-                    refl, se = net.get_reflexion_and_SE_TM(freq)
+                    refl = net.get_reflexion_TM(freq)
+                    se = net.get_se_TM(freq)
                     transmitividad = 10**(-se/10)
                 else:
                     refl = net.get_reflexion_TE(freq)

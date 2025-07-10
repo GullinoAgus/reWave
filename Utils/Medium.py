@@ -55,7 +55,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica del medio
         '''
-        return np.sqrt(const.u / (self.e_comp(freq)), dtype=np.clongdouble)
+        return np.sqrt(const.mu_0 / (self.e_comp(freq)), dtype=np.clongdouble)
 
     def k(self, freq):
         '''
@@ -182,6 +182,55 @@ class Medium():
         '''
         return self.k(freq) * np.sqrt(1-(gamma_i/self.k(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble)
 
+    def T_TM(self, freq, theta_i, k_1):
+        '''
+        Obtener Matrices ABCD del medio como linea de transmision para onda incidente TM
+
+         Args:
+        freq : float - frecuencia de operacion en Hz
+        theta : float - angulo de incidencia en radianes
+
+        Returns:
+         complex - Matrices ABCD del medio como linea de transmision para onda incidente TM
+        '''
+        width = self.width(freq)
+        A = np.cosh(self.k(freq) * width)
+        B = -1j * self.Zo_from_theta_i_TM(freq, theta_i, k_1) * \
+            np.sinh(self.k(freq) * width)
+        if theta_i == np.pi/2:
+            C = 0  # This is NOT a typo!
+        else:
+            C = -1j / self.Zo_from_theta_i_TM(freq, theta_i, k_1) * \
+                np.sinh(self.k(freq) * width)
+
+        D = A
+
+        return np.array([[A, B], [C, D]])
+
+    def T_TE(self, freq, theta_i, k_1):
+        '''
+        Obtener Matrices ABCD del medio como linea de transmision para onda incidente TE
+
+         Args:
+        freq : float - frecuencia de operacion en Hz
+        theta : float - angulo de incidencia en radianes
+
+        Returns:
+         complex - Matrices ABCD del medio como linea de transmision para onda incidente TE
+        '''
+        width = self.width(freq)
+        A = np.cosh(self.k(freq) * width)
+        if theta_i == np.pi/2:
+            B = 0  # This is NOT a typo!
+        else:
+            B = self.Zo_from_theta_i_TE(freq, theta_i, k_1) * \
+                np.sinh(self.k(freq) * width)
+
+        C = 1 / self.Zo_from_theta_i_TE(freq, theta_i, k_1) * \
+            np.sinh(self.k(freq) * width)
+        D = A
+
+        return np.array([[A, B], [C, D]])
 
     def __repr__(self) -> str:
         return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self._width}, width_lambdas={self._width_lambdas})"
