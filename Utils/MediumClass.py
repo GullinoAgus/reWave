@@ -68,7 +68,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica del medio
         '''
-        return np.sqrt(const.u / (self.e_comp(freq)), dtype=np.complex256)
+        return np.sqrt(self.u / (self.e_comp(freq)), dtype=np.complex256)
 
     def Zo_par(self, freq, theta):
         '''
@@ -225,4 +225,4 @@ class Medium():
         return np.array([[A, B], [C, D]])
 
     def __repr__(self) -> str:
-        return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self.width}, width_lambdas={self.width_lambdas})"
+        return f"MediumClass(er={self.er}, ur={self.ur}, sigma={self.sigma}, width={self._width}, width_lambdas={self._width_lambdas})"
