@@ -47,7 +47,7 @@ class MplCanvas(FigureCanvas):
         self.fig.canvas.draw()       
         super().resizeEvent(event)
 
-    def plot_efficiency(self, x, EA, ylims=None, xlims=None):
+    def plot_efficiency(self, x, EA, unit: str, ylims=None, xlims=None):
         self.axes.clear()
         self.axes.format_coord = format_coord_piola
 
@@ -61,7 +61,7 @@ class MplCanvas(FigureCanvas):
         self.axes.set_xscale('linear')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
-        self.axes.set_xlabel('Frecuencia [GHz]')
+        self.axes.set_xlabel(f'Frecuencia [{unit}]')
         self.axes.set_ylabel('Eficiencia [dB]')
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
@@ -75,7 +75,7 @@ class MplCanvas(FigureCanvas):
 
         self.fig.canvas.draw()
 
-    def plot_for_freq(self, x, ref, trans, ax1_label, ax2_label, y_label1, y_label2, ylims=None, xlims=None):
+    def plot_for_freq(self, x, ref, trans, ax1_label, ax2_label, y_label1, y_label2, unit: str, ylims=None, xlims=None):
         if self.axes2 == None:
             self.init_plot_coefs()
         self.axes.clear()
@@ -103,7 +103,7 @@ class MplCanvas(FigureCanvas):
         self.axes2.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes2.grid(which='both')
-        self.axes2.set_xlabel('Frecuencia [GHz]')
+        self.axes2.set_xlabel(f'Frecuencia [{unit}]')
         self.axes.set_ylabel(y_label1)
         self.axes2.set_ylabel(y_label2)
         if hasattr(ylims, '__iter__'):

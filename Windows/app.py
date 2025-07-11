@@ -54,15 +54,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Calculo de la eficiencia de apantallamiento o de 
         los coeficientes en funcion de si es barrido de angulo o frecuencia
         '''
+        trans = []
+        T = []
+        EA = []
+        ref = []
+        R = []
 
         # Se construye la lista de medios a partir de los widgets de capas
         layers = self.create_layers()
-
-        trans = []
-        T = []
-        EA = [] # Esto es por definicion Ei/Et
-        ref = []
-        R = []
 
         # Se verifica si se esta en modo barrido de angulo o frecuencia
         if self.freq_sweep_check.isChecked():   # Barrido de angulo
@@ -116,10 +115,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 EA.append(se)
 
         self.coef_1_plot.plot_for_freq(
-            freqs, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión")
+            freqs, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión", unit=self.max_freq_unit_CB.currentText())
         self.coef_2_plot.plot_for_freq(
-            freqs, R, T, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida")
-        self.apant_plot.plot_efficiency(freqs, EA)
+            freqs, R, T, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida", unit=self.max_freq_unit_CB.currentText())
+        self.apant_plot.plot_efficiency(freqs, EA, unit=self.max_freq_unit_CB.currentText())
 
         self.plots.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(1)
