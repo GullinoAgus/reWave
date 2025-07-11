@@ -83,8 +83,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 tau = 1/se
                 eta_i = net._layer_list[0].eta(freq)
                 eta_s = net._layer_list[-1].eta(freq)
-                transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
-                    
+                #transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
+                transmit = 1 - np.abs(refl)**2
+
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.abs(tau))
                 T.append(transmit)
@@ -108,7 +109,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 tau = 1/se
                 eta_i = net._layer_list[0].eta(freq)
                 eta_s = net._layer_list[-1].eta(freq)
-                transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
+                #transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
+                transmit = 1 - np.abs(refl)**2
                     
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.abs(tau))
