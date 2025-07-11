@@ -7,7 +7,7 @@ from Utils.TLNetwork import TLineNetwork
 from Utils.plotWidget import MplCanvas
 from Utils.Medium import Medium
 
-units_dict = {'GHz': 1e9, 'MHz': 1e6, 'kHz': 1e3, 'Hz': 1}
+units_dict = {'GHz': 1e9, 'MHz': 1e6, 'KHz': 1e3, 'Hz': 1}
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -61,11 +61,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.freq_sweep_check.isChecked():
             x = np.linspace(0, 89, 10000)
             unit = 'Angulo de incidencia [°]'
+            xlim = [0, 89]
         else:
             x = np.logspace(np.log10(self.min_freq), np.log10(self.max_freq), 10000, base=10)
-            unit = "Frecuencia [" + self.min_freq_unit_CB.currentText() + "]"
-
-        print(x)
+            unit = "Frecuencia [Hz]"
+            xlim = [self.min_freq, self.max_freq]
 
         # Se verifica si se esta en modo barrido de angulo o frecuencia
         if self.freq_sweep_check.isChecked():   # Barrido de angulo
@@ -77,15 +77,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     refl = net.get_reflexion_TM(freq)
                     se = net.get_se_TM(freq)
                 else:
-                    refl = net.get_reflexion_TM(freq)
-                    se = net.get_se_TM(freq)
-                
-                transmitividad = 10**(-se/10)
-    
+                    refl = net.get_reflexion_TE(freq)
+                    se = net.get_se_TE(freq)
+                tau = 10**(-se/20)
+                    
                 ref.append(np.abs(refl)) #Coef. de reflexion
-                trans.append(np.sqrt(transmitividad))
-                T.append(transmitividad)
-                R.append(np.abs(ref[-1])**2) # Fraccion de potencia reflejada
+                trans.append(np.abs(tau))
+                T.append(trans[-1]**2)
+                R.append(ref[-1]**2) # Fraccion de potencia reflejada
                 EA.append(se)
 
         else:  # Barrido de freq
@@ -101,20 +100,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 else:
                     refl = net.get_reflexion_TE(freq)
                     se = net.get_se_TE(freq)
-                
-                transmitividad = 10**(-se/10)
-                    
-                ref.append(np.abs(refl))
-                trans.append(np.sqrt(transmitividad))
-                T.append(transmitividad)
-                R.append(np.abs(ref[-1])**2)
+                tau = 10**(-se/20)
+                                    
+                ref.append(np.abs(refl)) #Coef. de reflexion
+                trans.append(np.abs(tau))
+                T.append(trans[-1]**2)
+                R.append(ref[-1]**2) # Fraccion de potencia reflejada
                 EA.append(se)
 
-
         self.coef_1_plot.plot_for_freq(
-            x, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión", unit=unit)
+            x, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión", unit=unit, xlims=xlim)
         self.coef_2_plot.plot_for_freq(
-            x, R, T, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida", unit=unit)
+            x, R, T, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida", unit=unit, xlims=xlim)
     
         self.apant_plot.plot_efficiency(x, EA, unit=unit)
 
@@ -127,12 +124,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.incidence_label.setDisabled(True)
             self.max_freq_input.setDisabled(True)
             self.max_freq_label.setDisabled(True)
+            self.max_freq_unit_CB.setDisabled(True)
             self.min_freq_label.setText("Frec")
         else:
             self.incidence_input.setEnabled(True)
             self.incidence_label.setEnabled(True)
             self.max_freq_input.setEnabled(True)
             self.max_freq_label.setEnabled(True)
+            self.max_freq_unit_CB.setEnabled(True)
             self.min_freq_label.setText("Frec Min")
 
     def add_layer(self):
@@ -162,7 +161,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if len(self.layer_list) >= 2:
                 self.calculateButton.setEnabled(True)
-
         
         pass
 
@@ -196,7 +194,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @property
     def min_freq(self):
-        return locale.atof(self.min_freq_input.text()) * units_dict[self.max_freq_unit_CB.currentText()]
+        return locale.atof(self.min_freq_input.text()) * units_dict[self.min_freq_unit_CB.currentText()]
 
     @property
     def max_freq(self):

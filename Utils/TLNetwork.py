@@ -13,7 +13,7 @@ class TLineNetwork():
 
         pass
 
-    def Zin(self, Zo, Zl, gammaL):
+    def Zin(self, Zi, Zl, kL):
         '''
         Funcion que calcula la impedancia equivalente vista desde 
         una distancia L de una interfaz entre 2 medios.
@@ -23,7 +23,7 @@ class TLineNetwork():
         gammaL : complex float - const de propagacion * espesor del medio.
 
         '''
-        return Zo*(Zl+Zo*np.tanh(gammaL, dtype=np.clongdouble))/(Zo+Zl*np.tanh(gammaL, dtype=np.clongdouble))
+        return Zi*(Zl+ 1j*Zi*np.tan(kL, dtype=np.clongdouble))/(Zi+1j*Zl*np.tan(kL, dtype=np.clongdouble))
 
     def Gamma(self, Zo, Zl):
         '''
@@ -49,8 +49,8 @@ class TLineNetwork():
         # teniendo en cuenta todas las capas anteriores.
         for mi in reversed(self._layer_list[1:-1]):
             Zi = mi.Zo_from_theta_i_TM(freq, self._theta_1, k_1)
-            gammaL = mi.gamma(freq) * mi.width(freq)
-            Zeq = self.Zin(Zi, Zeq, gammaL)
+            kL = self.k_x(freq, mi, Zi) * mi.width(freq)
+            Zeq = self.Zin(Zi, Zeq, kL)
         Zi = self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
         Gamma_in = self.Gamma(Zi, Zeq)
 
@@ -107,7 +107,7 @@ class TLineNetwork():
     def get_reflexion_TE(self, freq):
         '''
         Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
-        para ondas TE
+        para ondas TM
 
          freq : float - frecuencia de operacion en Hz
         Returns:
@@ -120,16 +120,14 @@ class TLineNetwork():
 
         # Para cada medio intermedio, calculo su impedancia de entrada equivalente
         # teniendo en cuenta todas las capas anteriores.
-        for mi in self._layer_list[-2:0:-1]:
-            Zo = mi.Zo_from_theta_i_TE(freq, self._theta_1, k_1)
-            gammaL = mi.gamma(freq) * mi.width(freq)
-            
-            # Calculo de la impedancia equivalente
-            Zeq = self.Zin(Zo, Zeq, gammaL)
+        for mi in reversed(self._layer_list[1:-1]):
+            Zi = mi.Zo_from_theta_i_TE(freq, self._theta_1, k_1)
+            kL = self.k_x(freq, mi, Zi) * mi.width(freq)
+            Zeq = self.Zin(Zi, Zeq, kL)
+        Zi = self._layer_list[0].Zo_from_theta_i_TE(freq, self._theta_1, k_1)
+        Gamma_in = self.Gamma(Zi, Zeq)
 
-        Zo = self._layer_list[0].Zo_from_theta_i_TE(freq, self._theta_1, k_1)
-
-        return self.Gamma(Zo, Zeq)
+        return Gamma_in
     
     @property
     def theta_i(self):
