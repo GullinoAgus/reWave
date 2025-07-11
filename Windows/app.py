@@ -54,6 +54,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Calculo de la eficiencia de apantallamiento o de 
         los coeficientes en funcion de si es barrido de angulo o frecuencia
         '''
+
         trans = []
         T = []
         EA = []
@@ -63,15 +64,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Se construye la lista de medios a partir de los widgets de capas
         layers = self.create_layers()
 
+        if self.freq_sweep_check.isChecked():
+            x = np.linspace(0, 89, 10000)
+            unit = 'Angulo de incidencia [°]'
+        else:
+            x = np.logspace(np.log10(self.min_freq), np.log10(self.max_freq), 10000, base=10)
+            unit = "Frecuencia [" + self.min_freq_unit_CB.currentText() + "]"
+
+        print(x)
+
         # Se verifica si se esta en modo barrido de angulo o frecuencia
         if self.freq_sweep_check.isChecked():   # Barrido de angulo
-            self.apant_plot.hide()
-            self.apant_plot.navToolBar.hide()
-            
             freq = self.min_freq
-            theta_i = np.linspace(0, np.pi/2, 10000)
-
-            for theta in theta_i:
+            
+            for theta in np.radians(x):
                 net = TLineNetwork(layers, theta)
                 if self.polarization_CB.currentText() == "TM":
                     refl = net.get_reflexion_TM(freq)
@@ -89,15 +95,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 EA.append(se)
 
         else:  # Barrido de freq
-            self.apant_plot.show()
-            self.apant_plot.navToolBar.show()
-
             # Armo la cadena de lineas de transmision equivalente
             net = TLineNetwork(layers, self.theta_i)
-            freqs = np.logspace(np.log10(self.min_freq), np.log10(self.max_freq), 10000, base=10)
 
             # Verifico el tipo de polarizacion incidente
-            for freq in freqs:
+            for freq in x:
                 if self.polarization_CB.currentText() == "TM":
                     # Calculo del coef de reflexion total y las perdidas
                     refl = net.get_reflexion_TM(freq)
@@ -114,32 +116,30 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 R.append(np.abs(ref[-1])**2)
                 EA.append(se)
 
+
         self.coef_1_plot.plot_for_freq(
-            freqs, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión", unit=self.max_freq_unit_CB.currentText())
+            x, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión", unit=unit)
         self.coef_2_plot.plot_for_freq(
-            freqs, R, T, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida", unit=self.max_freq_unit_CB.currentText())
-        self.apant_plot.plot_efficiency(freqs, EA, unit=self.max_freq_unit_CB.currentText())
+            x, R, T, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida", unit=unit)
+    
+        self.apant_plot.plot_efficiency(x, EA, unit=unit)
 
         self.plots.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(1)
 
     def freq_sweep_clicked(self, state):
         if state:
-            self.polarization_CB.setDisabled(True)
-            self.polarization_label.setDisabled(True)
             self.incidence_input.setDisabled(True)
             self.incidence_label.setDisabled(True)
             self.max_freq_input.setDisabled(True)
             self.max_freq_label.setDisabled(True)
-            self.min_freq_label.setText("Frec [GHz]")
+            self.min_freq_label.setText("Frec")
         else:
-            self.polarization_CB.setEnabled(True)
-            self.polarization_label.setEnabled(True)
             self.incidence_input.setEnabled(True)
             self.incidence_label.setEnabled(True)
             self.max_freq_input.setEnabled(True)
             self.max_freq_label.setEnabled(True)
-            self.min_freq_label.setText("Frec Min [GHz]")
+            self.min_freq_label.setText("Frec Min")
 
     def add_layer(self):
         if len(self.layer_list) == 0:
@@ -148,12 +148,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                 "Incidencia", len(
                                     self.layer_list), self.layer_swap_handler,
                                 self.layer_delete_handler)
+            self.calculateButton.setEnabled(False)
         elif len(self.layer_list) == 1:
             layer = LayerWidget(self.layer_view_content, self.mu_value, self.epsilon_value,
                                 self.sigma_value, self.width_value, self.width_unit, self.layer_name,
                                 "Transmision", len(
                                     self.layer_list), self.layer_swap_handler,
                                 self.layer_delete_handler)
+            self.calculateButton.setEnabled(False)
         else:
             layer = LayerWidget(self.layer_view_content, self.mu_value, self.epsilon_value,
                                 self.sigma_value, self.width_value, self.width_unit, self.layer_name,
@@ -161,7 +163,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     self.layer_list), self.layer_swap_handler,
                                 self.layer_delete_handler)
             self.layer_list[-1].set_type("Intermedio")
-        self.layer_list.append(layer)
+
+        self.layer_list.append(layer) # Agregamos la capa
+
+        if len(self.layer_list) >= 2:
+                self.calculateButton.setEnabled(True)
+
+        
         pass
 
     @property
@@ -227,6 +235,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         auxlay.removeWidget(layer)
         layer.destroy(True, True)
         layer.deleteLater()
+        
+        if len(self.layer_list) < 2:
+            self.calculateButton.setEnabled(False)
+
         if layer_num == 0 and len(self.layer_list):
             self.layer_list[0].set_type("Incidencia")
         elif layer_num == len(self.layer_list) and len(self.layer_list):

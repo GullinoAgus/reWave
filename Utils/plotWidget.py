@@ -61,7 +61,7 @@ class MplCanvas(FigureCanvas):
         self.axes.set_xscale('linear')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
-        self.axes.set_xlabel(f'Frecuencia [{unit}]')
+        self.axes.set_xlabel(f'{unit}')
         self.axes.set_ylabel('Eficiencia [dB]')
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
@@ -103,7 +103,7 @@ class MplCanvas(FigureCanvas):
         self.axes2.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes2.grid(which='both')
-        self.axes2.set_xlabel(f'Frecuencia [{unit}]')
+        self.axes2.set_xlabel(f'{unit}')
         self.axes.set_ylabel(y_label1)
         self.axes2.set_ylabel(y_label2)
         if hasattr(ylims, '__iter__'):

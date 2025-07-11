@@ -37,6 +37,16 @@
            <string>Añadir capa</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="sigma_input">
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="maxLength">
+              <number>100</number>
+             </property>
+            </widget>
+           </item>
            <item row="5" column="0" colspan="3">
             <widget class="QPushButton" name="add_layer_button">
              <property name="text">
@@ -48,40 +58,6 @@
             <widget class="QLabel" name="epsilon_label">
              <property name="text">
               <string>εr</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="layer_name_label">
-             <property name="text">
-              <string>Nombre</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="epsilon_input">
-             <property name="text">
-              <string>1e0</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="mu_label">
-             <property name="text">
-              <string>μr</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="sigma_label">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>30</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>σ</string>
              </property>
             </widget>
            </item>
@@ -99,17 +75,10 @@
              </item>
             </widget>
            </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="width_label">
+           <item row="0" column="0">
+            <widget class="QLabel" name="mu_label">
              <property name="text">
-              <string>Espesor</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QLineEdit" name="layer_name_input">
-             <property name="text">
-              <string>Capa</string>
+              <string>μr</string>
              </property>
             </widget>
            </item>
@@ -120,6 +89,33 @@
              </property>
             </widget>
            </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="epsilon_input">
+             <property name="text">
+              <string>1e0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="sigma_label">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>σ</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="layer_name_input">
+             <property name="text">
+              <string>Capa</string>
+             </property>
+            </widget>
+           </item>
            <item row="3" column="1">
             <widget class="QLineEdit" name="width_input">
              <property name="text">
@@ -127,13 +123,17 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
-            <widget class="QLineEdit" name="sigma_input">
+           <item row="3" column="0">
+            <widget class="QLabel" name="width_label">
              <property name="text">
-              <string>0</string>
+              <string>Espesor</string>
              </property>
-             <property name="maxLength">
-              <number>100</number>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="layer_name_label">
+             <property name="text">
+              <string>Nombre</string>
              </property>
             </widget>
            </item>
@@ -168,7 +168,10 @@
          </widget>
         </item>
         <item row="3" column="0" colspan="2">
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="calculateButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Calcular</string>
           </property>
@@ -180,55 +183,6 @@
            <string>Sim Config</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
-           <item row="3" column="2">
-            <widget class="QDoubleSpinBox" name="incidence_input">
-             <property name="font">
-              <font>
-               <kerning>true</kerning>
-              </font>
-             </property>
-             <property name="frame">
-              <bool>true</bool>
-             </property>
-             <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
-             </property>
-             <property name="maximum">
-              <double>90.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="3">
-            <widget class="QLabel" name="polarization_label">
-             <property name="text">
-              <string>Polarizacion</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="2">
-            <widget class="QSpinBox" name="period_input">
-             <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
-             </property>
-             <property name="minimum">
-              <number>1</number>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="4">
-            <widget class="QComboBox" name="polarization_CB">
-             <item>
-              <property name="text">
-               <string>TM</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>TE</string>
-              </property>
-             </item>
-            </widget>
-           </item>
            <item row="0" column="1" colspan="2">
             <widget class="QCheckBox" name="freq_sweep_check">
              <property name="enabled">
@@ -242,78 +196,6 @@
              </property>
              <property name="tristate">
               <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QLabel" name="period_label">
-             <property name="text">
-              <string>Periodos de capas</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="incidence_label">
-             <property name="text">
-              <string>Incidencia [º]</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLabel" name="min_freq_label">
-             <property name="text">
-              <string>Frec Min</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QDoubleSpinBox" name="min_freq_input">
-             <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
-             </property>
-             <property name="correctionMode">
-              <enum>QAbstractSpinBox::CorrectionMode::CorrectToPreviousValue</enum>
-             </property>
-             <property name="decimals">
-              <number>3</number>
-             </property>
-             <property name="minimum">
-              <double>0.001000000000000</double>
-             </property>
-             <property name="maximum">
-              <double>100.000000000000000</double>
-             </property>
-             <property name="singleStep">
-              <double>0.050000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="max_freq_label">
-             <property name="text">
-              <string>Frec Max</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QDoubleSpinBox" name="max_freq_input">
-             <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
-             </property>
-             <property name="decimals">
-              <number>3</number>
-             </property>
-             <property name="minimum">
-              <double>0.001000000000000</double>
-             </property>
-             <property name="maximum">
-              <double>100.000000000000000</double>
-             </property>
-             <property name="singleStep">
-              <double>0.050000000000000</double>
-             </property>
-             <property name="value">
-              <double>10.000000000000000</double>
              </property>
             </widget>
            </item>
@@ -336,6 +218,80 @@
              </item>
             </widget>
            </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="max_freq_label">
+             <property name="text">
+              <string>Frec Max</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QSpinBox" name="max_freq_input">
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>1000</number>
+             </property>
+             <property name="value">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="incidence_label">
+             <property name="text">
+              <string>Incidencia [º]</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="min_freq_label">
+             <property name="text">
+              <string>Frec Min</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QDoubleSpinBox" name="incidence_input">
+             <property name="font">
+              <font>
+               <kerning>true</kerning>
+              </font>
+             </property>
+             <property name="frame">
+              <bool>true</bool>
+             </property>
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+             </property>
+             <property name="maximum">
+              <double>90.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QSpinBox" name="min_freq_input">
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+             </property>
+             <property name="correctionMode">
+              <enum>QAbstractSpinBox::CorrectionMode::CorrectToPreviousValue</enum>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>1000</number>
+             </property>
+             <property name="value">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
            <item row="2" column="3">
             <widget class="QComboBox" name="max_freq_unit_CB">
              <item>
@@ -351,6 +307,27 @@
              <item>
               <property name="text">
                <string>KHz</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="polarization_label">
+             <property name="text">
+              <string>Polarizacion</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="3">
+            <widget class="QComboBox" name="polarization_CB">
+             <item>
+              <property name="text">
+               <string>TM</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>TE</string>
               </property>
              </item>
             </widget>
@@ -427,7 +404,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton</sender>
+   <sender>calculateButton</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
    <slot>calculate()</slot>
