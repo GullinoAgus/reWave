@@ -78,14 +78,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     se = net.get_se_TM(freq)
                 else:
                     refl = net.get_reflexion_TE(freq)
-                    se = net.get_se_TE(freq)
-                tau = 10**(-se/20)
+                    se = net.get_se_TE(freq) #Ei/Et
+
+                tau = 1/se
+                eta_i = net._layer_list[0].eta(freq)
+                eta_s = net._layer_list[-1].eta(freq)
+                transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
                     
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.abs(tau))
-                T.append(trans[-1]**2)
+                T.append(transmit)
                 R.append(ref[-1]**2) # Fraccion de potencia reflejada
-                EA.append(se)
+                EA.append(20 * np.log10(tau))
 
         else:  # Barrido de freq
             # Armo la cadena de lineas de transmision equivalente
@@ -100,13 +104,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 else:
                     refl = net.get_reflexion_TE(freq)
                     se = net.get_se_TE(freq)
-                tau = 10**(-se/20)
-                                    
+                
+                tau = 1/se
+                eta_i = net._layer_list[0].eta(freq)
+                eta_s = net._layer_list[-1].eta(freq)
+                transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
+                    
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.abs(tau))
-                T.append(trans[-1]**2)
+                T.append(transmit)
                 R.append(ref[-1]**2) # Fraccion de potencia reflejada
-                EA.append(se)
+                EA.append(20 * np.log10(tau))
 
         self.coef_1_plot.plot_for_freq(
             x, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión", unit=unit, xlims=xlim)

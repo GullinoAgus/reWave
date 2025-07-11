@@ -30,6 +30,56 @@ class TLineNetwork():
         Calculo de coeficiente de reflexion en una interfaz
         '''
         return (Zl-Zo)/(Zl+Zo)
+    
+    def get_se_TM(self, freq):
+        
+        T_total = np.identity(2, dtype=np.clongdouble)
+        m1 = self._layer_list[0]
+        k_1 = m1.k(freq) #TOOD: No se si es k o k_x_1
+        eta_i = m1.eta(freq)
+        eta_s = self._layer_list[-1].eta(freq)
+
+        for mi in reversed(self._layer_list[1:-1]):
+            k_x_i = self.k_x_i(freq=freq, mi=mi, m1=m1)
+            Ti = mi.T_TM(freq, self.theta_i, k_1, k_x_i)  # Get ABCD matrix
+            T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
+
+        A, B = T_total[0, 0], T_total[0, 1]
+        C, D = T_total[1, 0], T_total[1, 1]
+
+        #se =  A + B/eta_s #(1+eta_i)/(A+C+(B+D)/eta_s)
+
+        se = 2/(A + B/eta_s + C*eta_i + D*(eta_i/eta_s))
+
+        return np.abs(se)
+    
+    def get_se_TE(self, freq):
+        
+        T_total = np.identity(2, dtype=np.clongdouble)
+        m1 = self._layer_list[0]
+        k_1 = m1.k(freq)
+        eta_i = m1.eta(freq)
+        eta_s = self._layer_list[-1].eta(freq)
+
+        for mi in reversed(self._layer_list[1:-1]):
+            k_x_i = self.k_x_i(freq=freq, mi=mi, m1=m1)
+            Ti = mi.T_TE(freq, self.theta_i, k_1, k_x_i)  # Get ABCD matrix
+            T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
+
+        A, B = T_total[0, 0], T_total[0, 1]
+        C, D = T_total[1, 0], T_total[1, 1]
+
+        #se =  A + B/eta_s #(1+eta_i)/(A+C+(B+D)/eta_s)
+
+        se = 2/(A + B/eta_s + C*eta_i + D*(eta_i/eta_s))
+
+        return np.abs(se)
+    
+    def k_x_i(self, freq, mi: Medium, m1: Medium):
+        k0 = 2 * np.pi * freq / const.c
+        sin2_theta = np.sin(self.theta_i)**2
+        k_x = k0 * np.sqrt((mi.ur * mi.e_comp(freq)- m1.ur * m1.e_comp(freq) * sin2_theta)/const.epsilon_0)
+        return k_x
 
     def get_reflexion_TM(self, freq):
         '''
@@ -42,67 +92,26 @@ class TLineNetwork():
 
         '''
         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
-        k_1 = self._layer_list[0].k(freq)
-        Zeq = self._layer_list[-1].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+        m1 = self._layer_list[0]
+        k_1 = m1.k(freq)
+        Zeq = self._layer_list[-1].Zo_from_theta_i_TM(freq, self.theta_i, k_1)
 
         # Para cada medio intermedio, calculo su impedancia de entrada equivalente
         # teniendo en cuenta todas las capas anteriores.
         for mi in reversed(self._layer_list[1:-1]):
-            Zi = mi.Zo_from_theta_i_TM(freq, self._theta_1, k_1)
-            kL = self.k_x(freq, mi, Zi) * mi.width(freq)
+            Zi = mi.Zo_from_theta_i_TM(freq, self.theta_i, k_1)
+            #print("### m1 ###") 
+            #print(m1)
+            #print("### mi ###")
+            #print(mi)
+            kL = self.k_x_i(freq=freq, mi=mi, m1=m1) * mi.width(freq)
+            #print(kL)
             Zeq = self.Zin(Zi, Zeq, kL)
-        Zi = self._layer_list[0].Zo_from_theta_i_TM(freq, self._theta_1, k_1)
+            #print(Zeq)
+        Zi = self._layer_list[0].Zo_from_theta_i_TM(freq, self.theta_i, k_1)
         Gamma_in = self.Gamma(Zi, Zeq)
 
         return Gamma_in
-    
-    def get_se_TM(self, freq):
-        
-        T_total = np.identity(2, dtype=np.clongdouble)
-        k_1 = self._layer_list[0].k(freq)
-        eta_i = self._layer_list[0].eta(freq)
-        eta_s = self._layer_list[-1].eta(freq)
-
-        for mi in reversed(self._layer_list[1:-1]):
-            Z_i = mi.Zo_from_theta_i_TM(freq, self.theta_i, k_1)
-            k_i = self.k_x(freq, mi, Z_i)
-            Ti = mi.T_TM(freq, self.theta_i, k_1, k_i)  # Get ABCD matrix
-            T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
-
-        A, B = T_total[0, 0], T_total[0, 1]
-        C, D = T_total[1, 0], T_total[1, 1]
-
-        #se =  A + B/eta_s #(1+eta_i)/(A+C+(B+D)/eta_s)
-
-        se = 2/(A + B/eta_s + C*eta_i + D*(eta_i/eta_s))
-        
-        return -20 * np.log10(np.abs(se))
-    
-    def get_se_TE(self, freq):
-        
-        T_total = np.identity(2, dtype=np.clongdouble)
-        k_1 = self._layer_list[0].k(freq)
-        eta_i = self._layer_list[0].eta(freq)
-        eta_s = self._layer_list[-1].eta(freq)
-
-        for mi in reversed(self._layer_list[1:-1]):
-            Z_i = mi.Zo_from_theta_i_TE(freq, self.theta_i, k_1)
-            k_i = self.k_x(freq, mi, Z_i)
-            Ti = mi.T_TE(freq, self.theta_i, k_1, k_i)  # Get ABCD matrix
-            T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
-
-        A, B = T_total[0, 0], T_total[0, 1]
-        C, D = T_total[1, 0], T_total[1, 1]
-
-        #se =  A + B/eta_s #(1+eta_i)/(A+C+(B+D)/eta_s)
-
-        se = 2/(A + B/eta_s + C*eta_i + D*(eta_i/eta_s))
-        
-        return -20 * np.log10(np.abs(se))
-    
-    def k_x(self, freq, mi: Medium, Zi):
-        k_x = 2 * np.pi * freq * mi.u/Zi
-        return k_x
 
     def get_reflexion_TE(self, freq):
         '''
@@ -115,19 +124,25 @@ class TLineNetwork():
 
         '''
         # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
-        k_1 = self._layer_list[0].k(freq)
-        Zeq = self._layer_list[-1].Zo_from_theta_i_TE(freq, self._theta_1, k_1)
+        m1 = self._layer_list[0]
+        k_1 = m1.k(freq)
+        Zeq = self._layer_list[-1].Zo_from_theta_i_TE(freq, self.theta_i, k_1)
 
         # Para cada medio intermedio, calculo su impedancia de entrada equivalente
         # teniendo en cuenta todas las capas anteriores.
         for mi in reversed(self._layer_list[1:-1]):
-            Zi = mi.Zo_from_theta_i_TE(freq, self._theta_1, k_1)
-            kL = self.k_x(freq, mi, Zi) * mi.width(freq)
+            Zi = mi.Zo_from_theta_i_TE(freq, self.theta_i, k_1)
+            kL = self.k_x_i(freq=freq, mi=mi, m1=m1) * mi.width(freq)
             Zeq = self.Zin(Zi, Zeq, kL)
-        Zi = self._layer_list[0].Zo_from_theta_i_TE(freq, self._theta_1, k_1)
+        Zi = self._layer_list[0].Zo_from_theta_i_TE(freq, self.theta_i, k_1)
         Gamma_in = self.Gamma(Zi, Zeq)
 
         return Gamma_in
+    
+    def theta_t(self, freq):
+        m1 = self._layer_list[0]
+        mN = self._layer_list[-1]
+        return np.arcsin(m1.k(freq)/mN.k(freq) * np.sin(self.theta_i))
     
     @property
     def theta_i(self):
@@ -141,6 +156,9 @@ class TLineNetwork():
     @property
     def theta_r(self):
         return self.theta_i
+    
+    
+
 
 
 if __name__ == "__main__":
