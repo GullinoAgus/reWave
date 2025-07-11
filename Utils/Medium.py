@@ -182,7 +182,7 @@ class Medium():
         '''
         return self.k(freq) * np.sqrt(1-(gamma_i/self.k(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble)
 
-    def T_TM(self, freq, theta_i, k_1):
+    def T_TM(self, freq, theta_i, k_1, k_i):
         '''
         Obtener Matrices ABCD del medio como linea de transmision para onda incidente TM
 
@@ -194,20 +194,20 @@ class Medium():
          complex - Matrices ABCD del medio como linea de transmision para onda incidente TM
         '''
         width = self.width(freq)
-        A = np.cos(self.k(freq) * width)
+        A = np.cos(k_i * width)
         B = -1j * self.Zo_from_theta_i_TM(freq, theta_i, k_1) * \
-            np.sin(self.k(freq) * width)
+            np.sin(k_i * width)
         if theta_i == np.pi/2:
             C = 0  # This is NOT a typo!
         else:
             C = -1j / self.Zo_from_theta_i_TM(freq, theta_i, k_1) * \
-                np.sin(self.k(freq) * width)
+                np.sin(k_i * width)
 
         D = A
 
         return np.array([[A, B], [C, D]])
 
-    def T_TE(self, freq, theta_i, k_1):
+    def T_TE(self, freq, theta_i, k_1, k_i):
         '''
         Obtener Matrices ABCD del medio como linea de transmision para onda incidente TE
 
@@ -219,15 +219,13 @@ class Medium():
          complex - Matrices ABCD del medio como linea de transmision para onda incidente TE
         '''
         width = self.width(freq)
-        A = np.cosh(self.k(freq) * width)
+        A = np.cos(k_i * width)
         if theta_i == np.pi/2:
             B = 0  # This is NOT a typo!
         else:
-            B = self.Zo_from_theta_i_TE(freq, theta_i, k_1) * \
-                np.sinh(self.k(freq) * width)
+            B = -1j * self.Zo_from_theta_i_TE(freq, theta_i, k_1) * np.sin(k_i * width)
 
-        C = 1 / self.Zo_from_theta_i_TE(freq, theta_i, k_1) * \
-            np.sinh(self.k(freq) * width)
+        C = -1j / self.Zo_from_theta_i_TE(freq, theta_i, k_1) * np.sin(k_i * width)
         D = A
 
         return np.array([[A, B], [C, D]])

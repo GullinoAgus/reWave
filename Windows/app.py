@@ -77,10 +77,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 if self.polarization_CB.currentText() == "TM":
                     refl = net.get_reflexion_TM(freq)
                     se = net.get_se_TM(freq)
-                    transmitividad = 10**(-se/10)
                 else:
-                    refl = net.get_reflexion_TE(freq)
-                    se = net.get_se_TE(freq)
+                    refl = net.get_reflexion_TM(freq)
+                    se = net.get_se_TM(freq)
+                
+                transmitividad = 10**(-se/10)
     
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.sqrt(transmitividad))
@@ -102,9 +103,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     # Calculo del coef de reflexion total y las perdidas
                     refl = net.get_reflexion_TM(freq)
                     se = net.get_se_TM(freq)
-                    transmitividad = 10**(-se/10)
                 else:
                     refl = net.get_reflexion_TE(freq)
+                    se = net.get_se_TE(freq)
+                
+                transmitividad = 10**(-se/10)
                     
                 ref.append(np.abs(refl))
                 trans.append(np.sqrt(transmitividad))
@@ -119,7 +122,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.apant_plot.plot_efficiency(freqs, EA)
 
         self.plots.setCurrentIndex(0)
-            
         self.tabWidget.setCurrentIndex(1)
 
     def freq_sweep_clicked(self, state):

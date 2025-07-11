@@ -60,15 +60,49 @@ class TLineNetwork():
         
         T_total = np.identity(2, dtype=np.clongdouble)
         k_1 = self._layer_list[0].k(freq)
+        eta_i = self._layer_list[0].eta(freq)
         eta_s = self._layer_list[-1].eta(freq)
 
         for mi in reversed(self._layer_list[1:-1]):
-            Ti = mi.T_TM(freq, self.theta_i, k_1)  # Get ABCD matrix
-            T_total = T_total @ Ti    # Matrix multiply: T_i * T_total
+            Z_i = mi.Zo_from_theta_i_TM(freq, self.theta_i, k_1)
+            k_i = self.k_x(freq, mi, Z_i)
+            Ti = mi.T_TM(freq, self.theta_i, k_1, k_i)  # Get ABCD matrix
+            T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
 
         A, B = T_total[0, 0], T_total[0, 1]
+        C, D = T_total[1, 0], T_total[1, 1]
+
+        #se =  A + B/eta_s #(1+eta_i)/(A+C+(B+D)/eta_s)
+
+        se = 2/(A + B/eta_s + C*eta_i + D*(eta_i/eta_s))
         
-        return -20 * np.log10(np.abs(A + B/eta_s))
+        return -20 * np.log10(np.abs(se))
+    
+    def get_se_TE(self, freq):
+        
+        T_total = np.identity(2, dtype=np.clongdouble)
+        k_1 = self._layer_list[0].k(freq)
+        eta_i = self._layer_list[0].eta(freq)
+        eta_s = self._layer_list[-1].eta(freq)
+
+        for mi in reversed(self._layer_list[1:-1]):
+            Z_i = mi.Zo_from_theta_i_TE(freq, self.theta_i, k_1)
+            k_i = self.k_x(freq, mi, Z_i)
+            Ti = mi.T_TE(freq, self.theta_i, k_1, k_i)  # Get ABCD matrix
+            T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
+
+        A, B = T_total[0, 0], T_total[0, 1]
+        C, D = T_total[1, 0], T_total[1, 1]
+
+        #se =  A + B/eta_s #(1+eta_i)/(A+C+(B+D)/eta_s)
+
+        se = 2/(A + B/eta_s + C*eta_i + D*(eta_i/eta_s))
+        
+        return -20 * np.log10(np.abs(se))
+    
+    def k_x(self, freq, mi: Medium, Zi):
+        k_x = 2 * np.pi * freq * mi.u/Zi
+        return k_x
 
     def get_reflexion_TE(self, freq):
         '''
@@ -96,12 +130,6 @@ class TLineNetwork():
         Zo = self._layer_list[0].Zo_from_theta_i_TE(freq, self._theta_1, k_1)
 
         return self.Gamma(Zo, Zeq)
-    
-    def k_x(self, freq, m1: Medium, mi: Medium):
-
-        k_0 = 2 * np.pi * freq * np.sqrt(const.mu_0 * const.epsilon_0, dtype=np.clongdouble)
-        k_x = k_0 * np.sqrt((mi.ur * mi.e_comp(freq) - m1.ur * m1.e_comp(freq) * (np.sin(self.theta_i)**2))/const.epsilon_0, dtype=np.clongdouble)
-        return k_x
     
     @property
     def theta_i(self):
