@@ -41,12 +41,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for layer in self.layer_list:
             if layer.isConnected():
                 layers.append(LayerWidget.to_medium(layer))
-        if self.period_input.value() > 1:
-            last_layer = layers.pop()
-            length = len(layers)
-            for i in range(self.period_input.value()):
-                layers.append(layers[1:length])
-            layers.append(last_layer)
         return layers
     
     def calculate(self):
