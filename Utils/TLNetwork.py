@@ -69,9 +69,8 @@ class TLineNetwork():
         A, B = T_total[0, 0], T_total[0, 1]
         C, D = T_total[1, 0], T_total[1, 1]
 
-        #se =  A + B/eta_s #(1+eta_i)/(A+C+(B+D)/eta_s)
-
-        se = 2/(A + B/eta_s + C*eta_i + D*(eta_i/eta_s))
+        se = (A + B/eta_s + C*eta_i + D*(eta_i/eta_s))/2
+        #se = ((A+C)+(B+D)*(eta_i/eta_s))/(1+eta_i)
 
         return np.abs(se)
     
@@ -142,6 +141,7 @@ class TLineNetwork():
     def theta_t(self, freq):
         m1 = self._layer_list[0]
         mN = self._layer_list[-1]
+        #print(m1.k(freq), mN.k(freq), np.sin(self.theta_i), np.sin(self.theta_i), self.theta_i)
         return np.arcsin(m1.k(freq)/mN.k(freq) * np.sin(self.theta_i))
     
     @property

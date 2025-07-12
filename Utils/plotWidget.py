@@ -76,6 +76,9 @@ class MplCanvas(FigureCanvas):
         self.fig.canvas.draw()
 
     def plot_for_freq(self, x, ref, trans, ax1_label, ax2_label, y_label1, y_label2, unit: str, ylims=None, xlims=None):
+
+        print(x[:5], ref[:5], trans[:5])
+
         if self.axes2 == None:
             self.init_plot_coefs()
         self.axes.clear()
@@ -106,41 +109,6 @@ class MplCanvas(FigureCanvas):
         self.axes2.set_xlabel(f'{unit}')
         self.axes.set_ylabel(y_label1)
         self.axes2.set_ylabel(y_label2)
-        if hasattr(ylims, '__iter__'):
-            self.axes.set_ylim(ylims[0], ylims[1])
-        if hasattr(xlims, '__iter__'):
-            self.axes.set_xlim(xlims[0], xlims[1])
-        else:
-            xlims = self.axes.get_xlim()
-            self.axes.set_xlim(xlims[0], xlims[1])
-
-        self.fig.canvas.draw()
-
-    def plot_coef_for_angle(self, x, y1, y2, symbol, ylims=None, xlims=None):
-        
-        if self.axes2 is not None:
-            self.fig.clear()
-            self.axes = self.fig.add_subplot(111)
-            self.axes2 = None
-            self.cursor = Cursor(self.axes, useblit=True,
-                                color='gray', linestyle='--', linewidth=0.8)
-
-        self.axes.clear()
-        self.axes.format_coord = format_coord_piola
-
-        line1 = self.axes.plot(
-            x*180/np.pi, y1, label=f"$|{symbol}_{{\\parallel}}|^2$")
-        line2 = self.axes.plot(
-            x*180/np.pi, y2, label=f"$|{symbol}_{{\\perp}}|^2$")
-        self.axes.yaxis.set_major_locator(self.y_locator)
-        self.axes.yaxis.set_major_formatter(self.y_formater)
-        self.dataCursor = [mplcursors.cursor(
-            line1, hover='Transient'), mplcursors.cursor(line2, hover='Transient')]
-        self.axes.grid(which='both')
-        self.axes.legend()
-        self.axes.set_xlabel('Angulo de incidencia [$\\degree$]')
-        self.axes.set_ylabel(f"$|{symbol}|$")
-        self.fig.tight_layout()
         if hasattr(ylims, '__iter__'):
             self.axes.set_ylim(ylims[0], ylims[1])
         if hasattr(xlims, '__iter__'):
