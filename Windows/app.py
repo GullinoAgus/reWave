@@ -85,13 +85,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     eta_s = net._layer_list[-1].Zo_TE(freq, self.theta_i)
 
                 tau = 1/se
-                transmit = np.abs(tau)**2 * (eta_i/eta_s).real * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
+                transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
 
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.abs(tau))
                 T.append(np.abs(transmit))
                 R.append(ref[-1]**2) # Fraccion de potencia reflejada
-                EA.append(20 * np.log10(se))
+                EA.append(20 * np.log10(np.abs(se)))
 
         else:  # Barrido de freq
             # Armo la cadena de lineas de transmision equivalente
@@ -111,13 +111,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     eta_s = net._layer_list[-1].Zo_TE(freq, self.theta_i)
                 
                 tau = 1/se
-                transmit = np.abs(tau)**2 * (eta_i/eta_s).real * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
+                transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
 
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.abs(tau))
                 T.append(np.abs(transmit))
                 R.append(ref[-1]**2) # Fraccion de potencia reflejada
-                EA.append(20 * np.log10(se))
+                EA.append(20 * np.log10(np.abs(se)))
 
         self.coef_1_plot.plot_for_freq(x, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión", unit=unit, xlims=xlim)
         self.coef_2_plot.plot_for_freq(x, R, T, y_label1='$R$', y_label2='$T$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida", unit=unit, xlims=xlim)
