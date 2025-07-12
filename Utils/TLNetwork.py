@@ -35,21 +35,25 @@ class TLineNetwork():
         
         T_total = np.identity(2, dtype=np.clongdouble)
         m1 = self._layer_list[0]
-        k_1 = m1.k(freq) #TOOD: No se si es k o k_x_1
-        eta_i = m1.eta(freq)
-        eta_s = self._layer_list[-1].eta(freq)
+        k_1 = self.k_x_i(freq, m1, m1) #TODO: No se si es k o k_x_1
+        eta_i = m1.Zo_TM(freq, self.theta_i)
+        eta_s = self._layer_list[-1].Zo_TM(freq, self.theta_i)
 
-        for mi in reversed(self._layer_list[1:-1]):
-            k_x_i = self.k_x_i(freq=freq, mi=mi, m1=m1)
-            Ti = mi.T_TM(freq, self.theta_i, k_1, k_x_i)  # Get ABCD matrix
-            T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
+        if len(self._layer_list) == 2:
+            tau = (1 + self.Gamma(eta_i, eta_s)) * (np.cos(self.theta_i)/np.cos(self.theta_t(freq)))
+            se = 1 / tau     # Ei/Et
+        else:
+            for mi in reversed(self._layer_list[1:-1]):
+                k_x_i = self.k_x_i(freq=freq, mi=mi, m1=m1)
+                Ti = mi.T_TM(freq, self.theta_i, k_1, k_x_i)  # Get ABCD matrix
+                T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
 
-        A, B = T_total[0, 0], T_total[0, 1]
-        C, D = T_total[1, 0], T_total[1, 1]
+            A, B = T_total[0, 0], T_total[0, 1]
+            C, D = T_total[1, 0], T_total[1, 1]
 
-        #se =  A + B/eta_s #(1+eta_i)/(A+C+(B+D)/eta_s)
+            #se =  A + B/eta_s #(1+eta_i)/(A+C+(B+D)/eta_s)
 
-        se = 2/(A + B/eta_s + C*eta_i + D*(eta_i/eta_s))
+            se = (A + B/eta_s + C*eta_i + D*(eta_i/eta_s))/2
 
         return np.abs(se)
     
@@ -57,27 +61,31 @@ class TLineNetwork():
         
         T_total = np.identity(2, dtype=np.clongdouble)
         m1 = self._layer_list[0]
-        k_1 = m1.k(freq)
-        eta_i = m1.eta(freq)
-        eta_s = self._layer_list[-1].eta(freq)
+        k_1 = self.k_x_i(freq, m1, m1)
+        eta_i = m1.Zo_TE(freq, self.theta_i)
+        eta_s = self._layer_list[-1].Zo_TE(freq, self.theta_i)
 
-        for mi in reversed(self._layer_list[1:-1]):
-            k_x_i = self.k_x_i(freq=freq, mi=mi, m1=m1)
-            Ti = mi.T_TE(freq, self.theta_i, k_1, k_x_i)  # Get ABCD matrix
-            T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
+        if len(self._layer_list) == 2:
+            tau = 1 + self.Gamma(eta_i, eta_s)
+            se = 1 / tau     # Ei/Et
+        else:
+            for mi in reversed(self._layer_list[1:-1]):
+                k_x_i = self.k_x_i(freq=freq, mi=mi, m1=m1)
+                Ti = mi.T_TE(freq, self.theta_i, k_1, k_x_i)  # Get ABCD matrix
+                T_total = Ti @ T_total    # Matrix multiply: T_i * T_total
 
-        A, B = T_total[0, 0], T_total[0, 1]
-        C, D = T_total[1, 0], T_total[1, 1]
+            A, B = T_total[0, 0], T_total[0, 1]
+            C, D = T_total[1, 0], T_total[1, 1]
 
-        se = (A + B/eta_s + C*eta_i + D*(eta_i/eta_s))/2
-        #se = ((A+C)+(B+D)*(eta_i/eta_s))/(1+eta_i)
+            se = (A + B/eta_s + C*eta_i + D*(eta_i/eta_s))/2
+            #se = ((A+C)+(B+D)*(eta_i/eta_s))/(1+eta_i)
 
         return np.abs(se)
-    
+        
     def k_x_i(self, freq, mi: Medium, m1: Medium):
         k0 = 2 * np.pi * freq / const.c
         sin2_theta = np.sin(self.theta_i)**2
-        k_x = k0 * np.sqrt((mi.ur * mi.e_comp(freq)- m1.ur * m1.e_comp(freq) * sin2_theta)/const.epsilon_0)
+        k_x = k0 * np.sqrt((mi.ur * mi.e_comp(freq)- m1.ur * m1.e_comp(freq) * sin2_theta)/const.epsilon_0, dtype=np.clongdouble)
         return k_x
 
     def get_reflexion_TM(self, freq):
@@ -138,11 +146,19 @@ class TLineNetwork():
 
         return Gamma_in
     
+    def is_evanescent(self, k_x: complex, tol: float = 1e-8) -> bool:
+        return np.abs(np.real(k_x)) < tol and np.imag(k_x) > tol
+    
     def theta_t(self, freq):
         m1 = self._layer_list[0]
         mN = self._layer_list[-1]
+        sin_theta_t = m1.k(freq) / mN.k(freq) * np.sin(self.theta_i)
         #print(m1.k(freq), mN.k(freq), np.sin(self.theta_i), np.sin(self.theta_i), self.theta_i)
-        return np.arcsin(m1.k(freq)/mN.k(freq) * np.sin(self.theta_i))
+        # Si es complejo o el argumento excede [-1, 1], entonces onda evanescente
+        if np.iscomplex(sin_theta_t) or not -1 <= np.real(sin_theta_t) <= 1:
+            return np.pi/2
+
+        return np.arcsin(sin_theta_t)
     
     @property
     def theta_i(self):

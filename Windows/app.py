@@ -81,15 +81,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     se = net.get_se_TE(freq) #Ei/Et
 
                 tau = 1/se
-                eta_i = net._layer_list[0].eta(freq)
-                eta_s = net._layer_list[-1].eta(freq)
+                eta_i = net._layer_list[0].Zo_TM(freq, self.theta_i)
+                eta_s = net._layer_list[-1].Zo_TM(freq, self.theta_i)
+                #print(net.theta_t(freq))
                 transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
 
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.abs(tau))
                 T.append(np.abs(transmit))
                 R.append(ref[-1]**2) # Fraccion de potencia reflejada
-                EA.append(20 * np.log10(tau))
+                EA.append(20 * np.log10(se))
 
         else:  # Barrido de freq
             # Armo la cadena de lineas de transmision equivalente
@@ -108,6 +109,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 tau = 1/se
                 eta_i = net._layer_list[0].eta(freq)
                 eta_s = net._layer_list[-1].eta(freq)
+                #print(net.theta_t(freq))
                 transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
 
                 print("coef")
@@ -121,10 +123,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 trans.append(np.abs(tau))
                 T.append(np.abs(transmit))
                 R.append(ref[-1]**2) # Fraccion de potencia reflejada
-                EA.append(20 * np.log10(tau))
+                EA.append(20 * np.log10(se))
 
         self.coef_1_plot.plot_for_freq(x, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión", unit=unit, xlims=xlim)
-        self.coef_2_plot.plot_for_freq(x, R, T, y_label1='$|\\Gamma|^2$', y_label2='$|\\tau|^2$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida", unit=unit, xlims=xlim)
+        self.coef_2_plot.plot_for_freq(x, R, T, y_label1='$R$', y_label2='$T$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida", unit=unit, xlims=xlim)
     
         self.apant_plot.plot_efficiency(x, EA, unit=unit)
 

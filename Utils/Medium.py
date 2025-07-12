@@ -95,7 +95,7 @@ class Medium():
         '''
 
         # TODO: Revisar caso borde
-        return self.eta(freq) / np.sin(theta, dtype=np.longdouble)
+        return self.eta(freq) / np.cos(theta, dtype=np.longdouble)
 
     def Zo_from_theta_i_TM(self, freq, theta_i, k_1):
         '''

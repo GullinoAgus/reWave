@@ -77,8 +77,6 @@ class MplCanvas(FigureCanvas):
 
     def plot_for_freq(self, x, ref, trans, ax1_label, ax2_label, y_label1, y_label2, unit: str, ylims=None, xlims=None):
 
-        print(x[:5], ref[:5], trans[:5])
-
         if self.axes2 == None:
             self.init_plot_coefs()
         self.axes.clear()
