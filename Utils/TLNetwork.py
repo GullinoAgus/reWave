@@ -157,8 +157,10 @@ class TLineNetwork():
         # Si es complejo o el argumento excede [-1, 1], entonces onda evanescente
         if np.iscomplex(sin_theta_t) or not -1 <= np.real(sin_theta_t) <= 1:
             return np.pi/2
+        
+        print(np.arcsin(np.abs(sin_theta_t), dtype=np.longdouble))
 
-        return np.arcsin(sin_theta_t)
+        return np.arcsin(np.abs(sin_theta_t), dtype=np.longdouble)
     
     @property
     def theta_i(self):
@@ -192,10 +194,6 @@ if __name__ == "__main__":
 
 '''
 Corregir ley de snell por las formulas q me mando patricio
-
-Separar coef de transmision y reflexion del poynting
-
-Agregar coef de transmision del poynting en barrido de angulo para perp y par
 
 Sobre las clases:
 

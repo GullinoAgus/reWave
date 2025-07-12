@@ -76,15 +76,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 if self.polarization_CB.currentText() == "TM":
                     refl = net.get_reflexion_TM(freq)
                     se = net.get_se_TM(freq)
+                    eta_i = net._layer_list[0].Zo_TM(freq, self.theta_i)
+                    eta_s = net._layer_list[-1].Zo_TM(freq, self.theta_i)
                 else:
                     refl = net.get_reflexion_TE(freq)
                     se = net.get_se_TE(freq) #Ei/Et
+                    eta_i = net._layer_list[0].Zo_TE(freq, self.theta_i)
+                    eta_s = net._layer_list[-1].Zo_TE(freq, self.theta_i)
 
                 tau = 1/se
-                eta_i = net._layer_list[0].Zo_TM(freq, self.theta_i)
-                eta_s = net._layer_list[-1].Zo_TM(freq, self.theta_i)
-                #print(net.theta_t(freq))
-                transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
+                transmit = np.abs(tau)**2 * (eta_i/eta_s).real * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
 
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.abs(tau))
@@ -99,25 +100,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # Verifico el tipo de polarizacion incidente
             for freq in x:
                 if self.polarization_CB.currentText() == "TM":
-                    # Calculo del coef de reflexion total y las perdidas
                     refl = net.get_reflexion_TM(freq)
                     se = net.get_se_TM(freq)
+                    eta_i = net._layer_list[0].Zo_TM(freq, self.theta_i)
+                    eta_s = net._layer_list[-1].Zo_TM(freq, self.theta_i)
                 else:
                     refl = net.get_reflexion_TE(freq)
-                    se = net.get_se_TE(freq)
+                    se = net.get_se_TE(freq) #Ei/Et
+                    eta_i = net._layer_list[0].Zo_TE(freq, self.theta_i)
+                    eta_s = net._layer_list[-1].Zo_TE(freq, self.theta_i)
                 
                 tau = 1/se
-                eta_i = net._layer_list[0].eta(freq)
-                eta_s = net._layer_list[-1].eta(freq)
-                #print(net.theta_t(freq))
-                transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
-
-                print("coef")
-                print(se)
-                print(tau)
-                print(np.abs(tau))
-                print(transmit)
-                print(np.abs(transmit))
+                transmit = np.abs(tau)**2 * (eta_i/eta_s).real * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
 
                 ref.append(np.abs(refl)) #Coef. de reflexion
                 trans.append(np.abs(tau))
