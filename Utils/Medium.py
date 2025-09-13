@@ -3,12 +3,11 @@ import numpy as np
 
 
 class Medium():
-    def __init__(self, er, ur, sigma, ei, width=None, width_lambdas=None):
+    def __init__(self, er, ur, sigma, width=None, width_lambdas=None):
         self.ur = ur
         self.er = er
         self.u = ur * const.mu_0
         self.e = self.er * const.epsilon_0
-        self.ei = ei
         self.sigma = sigma
         self._width = width
         self._width_lambdas = width_lambdas
@@ -56,7 +55,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica del medio
         '''
-        return np.sqrt(const.mu_0 / (self.e_comp(freq)), dtype=np.clongdouble)
+        return np.sqrt(self.u / (self.e_comp(freq)), dtype=np.clongdouble)
 
     def k(self, freq):
         '''
@@ -81,7 +80,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TM
         '''
-        return self.eta(freq) * np.cos(theta, dtype=np.longdouble)
+        return self.eta(freq) * np.cos(theta, dtype=np.float64)
     
     def Zo_TE(self, freq, theta):
         '''
@@ -96,7 +95,7 @@ class Medium():
         '''
 
         # TODO: Revisar caso borde
-        return self.eta(freq) / np.cos(theta, dtype=np.longdouble)
+        return self.eta(freq) / np.cos(theta, dtype=np.float64)
 
     def Zo_from_theta_i_TM(self, freq, theta_i, k_1):
         '''
@@ -109,7 +108,7 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TM
         '''
-        return self.eta(freq) * np.sqrt(1-(k_1*np.sin(theta_i, dtype=np.longdouble)/self.k(freq))**2, dtype=np.clongdouble)
+        return self.eta(freq) * np.sqrt(1-(k_1*np.sin(theta_i, dtype=np.float64) / self.k(freq) )**2, dtype=np.clongdouble)
 
     def Zo_from_theta_i_TE(self, freq, theta_i, k_i):
         '''
@@ -122,66 +121,10 @@ class Medium():
         Returns:
         complex - impedancia caracteristica equivalente para incidencia de ondas TE
         '''
-        return self.eta(freq) / np.sqrt(1-(k_i*np.sin(theta_i, dtype=np.longdouble)/self.k(freq))**2, dtype=np.clongdouble)
+        return self.eta(freq) / np.sqrt(1-(k_i*np.sin(theta_i, dtype=np.float64) / self.k(freq))**2, dtype=np.clongdouble)
 
     def gamma(self, freq):
         return -1j * self.k(freq)
-
-
-    ### REVISAR EL USO DE ESTASS ###
-
-    def gamma_TM(self, freq, theta):
-        '''
-        Obtener la constante de propagacion equivalente para incidencia de ondas TM
-        para una frecuencia dada y un angulo de incidencia theta
-        Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-        complex - constante de propagacion equivalente para incidencia de ondas TM
-        '''
-        return self.k(freq) * np.cos(theta, dtype=np.longdouble)
-
-    def gamma_from_theta_i_TM(self, freq, theta_i, gamma_i):
-        '''
-        Obtener la constante de propagacion equivalente para incidencia de ondas TM
-        para una frecuencia dada y un angulo de incidencia theta
-        Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-        complex - constante de propagacion equivalente para incidencia de ondas TM
-        '''
-        return self.k(freq) * np.sqrt(1-(gamma_i/self.k(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble)
-
-
-    def gamma_TE(self, freq, theta):
-        '''
-        Obtener la constante de propagacion equivalente para incidencia de ondas TE
-        para una frecuencia dada y un angulo de incidencia theta
-        Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-        complex - constante de propagacion equivalente para incidencia de ondas TE
-        '''
-        return self.k(freq) * np.cos(theta, dtype=np.longdouble)
-
-    def gamma_from_theta_i_TE(self, freq, theta_i, gamma_i):
-        '''
-        Obtener la constante de propagacion equivalente para incidencia de ondas TE
-        para una frecuencia dada y un angulo de incidencia theta
-        Args:
-        freq : float - frecuencia de operacion en Hz
-        theta : float - angulo de incidencia en radianes
-
-        Returns:
-        complex - constante de propagacion equivalente para incidencia de ondas TE
-        '''
-        return self.k(freq) * np.sqrt(1-(gamma_i/self.k(freq)*np.sin(theta_i, dtype=np.longdouble))**2, dtype=np.clongdouble)
 
     def T_TM(self, freq, theta_i, k_1, k_x_i):
         '''

@@ -337,16 +337,15 @@ class LayerWidget(QtWidgets.QWidget):
         self.boxlayout.addWidget(self.layer_type, 7, 0, 1, 3)
 
         self.mu_input.setText(locale.str(self.mur))
-        self.param_selector = QtWidgets.QComboBox(self.infoViewBox)
-        self.param_selector.addItems(["σ", "εi"])
-        self.boxlayout.addWidget(self.param_selector, 4, 0, 1, 1)
         self.mu_label.setText("μr")
         self.width_label.setText("Espesor")
         self.epsilon_label.setText("εr")
+        self.sigma_label.setText("σ")
         self.width_input.setText(locale.str(self.layer_width))
         self.width_unit_CB.setItemText(0, "λs")
         self.width_unit_CB.setItemText(1, "mm")
         self.width_unit_CB.setCurrentIndex(1 if width_unit == 'mm' else 0)
+        
         self.loss_input.setText((locale.str(self.sigma)))
         self.epsilon_input.setText(locale.str(self.er))
         self.layer_name_label.setText("Nombre")
@@ -371,7 +370,6 @@ class LayerWidget(QtWidgets.QWidget):
             self.width_label.setVisible(False)
             self.width_input.setVisible(False)
             self.width_unit_CB.setVisible(False)
-
         else:
             self.layer_type.setText("Intermedio")
             self.width_label.setVisible(True)
