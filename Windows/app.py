@@ -313,11 +313,11 @@ class LayerWidget(QtWidgets.QWidget):
         self.width_unit_CB.addItem("")
         self.width_unit_CB.addItem("")
         self.boxlayout.addWidget(self.width_unit_CB, 5, 2, 1, 1)
-        self.sigma_input = QtWidgets.QLineEdit(self.infoViewBox)
-        self.sigma_input.setMaxLength(100)
-        self.sigma_input.setObjectName("sigma_input")
-        self.sigma_input.setValidator(self.scientific_validator)
-        self.boxlayout.addWidget(self.sigma_input, 4, 1, 1, 1)
+        self.loss_input = QtWidgets.QLineEdit(self.infoViewBox)
+        self.loss_input.setMaxLength(100)
+        self.loss_input.setObjectName("sigma_input")
+        self.loss_input.setValidator(self.scientific_validator)
+        self.boxlayout.addWidget(self.loss_input, 4, 1, 1, 1)
         self.epsilon_input = QtWidgets.QLineEdit(self.infoViewBox)
         self.epsilon_input.setObjectName("epsilon_input")
         self.epsilon_input.setValidator(self.scientific_validator)
@@ -337,7 +337,9 @@ class LayerWidget(QtWidgets.QWidget):
         self.boxlayout.addWidget(self.layer_type, 7, 0, 1, 3)
 
         self.mu_input.setText(locale.str(self.mur))
-        self.sigma_label.setText("σ")
+        self.param_selector = QtWidgets.QComboBox(self.infoViewBox)
+        self.param_selector.addItems(["σ", "εi"])
+        self.boxlayout.addWidget(self.param_selector, 4, 0, 1, 1)
         self.mu_label.setText("μr")
         self.width_label.setText("Espesor")
         self.epsilon_label.setText("εr")
@@ -345,13 +347,13 @@ class LayerWidget(QtWidgets.QWidget):
         self.width_unit_CB.setItemText(0, "λs")
         self.width_unit_CB.setItemText(1, "mm")
         self.width_unit_CB.setCurrentIndex(1 if width_unit == 'mm' else 0)
-        self.sigma_input.setText((locale.str(self.sigma)))
+        self.loss_input.setText((locale.str(self.sigma)))
         self.epsilon_input.setText(locale.str(self.er))
         self.layer_name_label.setText("Nombre")
         self.layer_name_input.setText(self.name)
         self.layer_type.setText(layer_type)
         self.set_type(layer_type)
-
+    
     def setConnected(self, en):
         self.connected = en
 
@@ -399,7 +401,7 @@ class LayerWidget(QtWidgets.QWidget):
 
     @property
     def sigma_value(self):
-        return locale.atof(self.sigma_input.text())
+        return locale.atof(self.loss_input.text())
 
     @property
     def width_value(self):

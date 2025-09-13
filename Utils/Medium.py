@@ -3,11 +3,12 @@ import numpy as np
 
 
 class Medium():
-    def __init__(self, er, ur, sigma, width=None, width_lambdas=None):
+    def __init__(self, er, ur, sigma, ei, width=None, width_lambdas=None):
         self.ur = ur
         self.er = er
         self.u = ur * const.mu_0
         self.e = self.er * const.epsilon_0
+        self.ei = ei
         self.sigma = sigma
         self._width = width
         self._width_lambdas = width_lambdas
