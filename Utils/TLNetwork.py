@@ -4,176 +4,166 @@ import numpy as np
 from Utils.Medium import Medium
 import scipy.constants as const
 
-class TLineNetwork():
-
-    def __init__(self, layer_list: list[Medium], theta_i: float):
-        # Calculo de la lista de medios con sus angulos de propagacion
-        self._theta_1 = theta_i
+class TLineNetwork:
+    def __init__(self, layer_list, theta_i):
+        """
+        layer_list: lista de objetos Medium (incluye la capa de entrada y la de salida)
+        theta_i: ángulo de incidencia en la primera capa (en radianes)
+        """
         self._layer_list = layer_list
+        self._theta_1 = theta_i
 
-        pass
-
-    def Zin(self, Zi, Zl, kL):
-        '''
-        Funcion que calcula la impedancia equivalente vista desde 
-        una distancia L de una interfaz entre 2 medios.
-
-        Zo : float - Impedancia caracteristica del medio de incidencia
-        Zl : float - Impedancia del medio luego de la interfaz
-        gammaL : complex float - const de propagacion * espesor del medio.
-
-        '''
-        return Zi*(Zl+ 1j*Zi*np.tan(kL, dtype=np.clongdouble))/(Zi+1j*Zl*np.tan(kL, dtype=np.clongdouble))
-
-    def Gamma(self, Zo, Zl):
-        '''
-        Calculo de coeficiente de reflexion en una interfaz
-        '''
-        return (Zl-Zo)/(Zl+Zo)
-    
-    def get_se_TM(self, freq):
-        
-        T_total = np.identity(2, dtype=np.clongdouble)
-        m1 = self._layer_list[0]
-        k_1 = m1.k(freq)
-        eta_i = m1.Zo_TM(freq, self.theta_i)
-        eta_s = self._layer_list[-1].Zo_TM(freq, self.theta_i)
-
-        if len(self._layer_list) == 2:
-            tau = (1 + self.Gamma(eta_i, eta_s)) * (np.cos(self.theta_i)/np.cos(self.theta_t(freq)))
-            se = 1 / tau     # Ei/Et
-        else:
-            for mi in self._layer_list[1:-1]:
-                k_x_i = self.k_x_i(freq=freq, mi=mi, m1=m1)
-                Ti = mi.T_TM(freq, self.theta_i, k_1, k_x_i)  # Get ABCD matrix
-                T_total = T_total @ Ti  # Matrix multiply: T_i * T_total
-
-            A, B = T_total[0, 0], T_total[0, 1]
-            C, D = T_total[1, 0], T_total[1, 1]
-
-            se = ((A+C)*eta_i+(B+D)*(eta_i/eta_s))/(1+eta_i)
-
-        return se
-    
-    def get_se_TE(self, freq):
-        
-        T_total = np.identity(2, dtype=np.clongdouble)
-        m1 = self._layer_list[0]
-        k_1 = m1.k(freq)
-        eta_i = m1.Zo_TE(freq, self.theta_i)
-        eta_s = self._layer_list[-1].Zo_TE(freq, self.theta_i)
-
-        if len(self._layer_list) == 2:
-            tau = 1 + self.Gamma(eta_i, eta_s)
-            se = 1/tau     # Ei/Et
-        else:
-            for mi in self._layer_list[1:-1]:
-                k_x_i = self.k_x_i(freq=freq, mi=mi, m1=m1)
-                Ti = mi.T_TE(freq, self.theta_i, k_1, k_x_i)  # Get ABCD matrix
-                T_total = T_total @ Ti    # Matrix multiply: T_i * T_total
-
-            A, B = T_total[0, 0], T_total[0, 1]
-            C, D = T_total[1, 0], T_total[1, 1]
-
-            #se = (A + B/eta_s + C*eta_i + D*(eta_i/eta_s))/2
-            se = ((A+C)*eta_i+(B+D)*(eta_i/eta_s))/(1+eta_i) #Ei/Et
-
-        return se
-        
-    def k_x_i(self, freq, mi: Medium, m1: Medium):
-        k0 = 2 * np.pi * freq / const.c
-        sin2_theta = np.sin(self.theta_i)**2
-        k_x = k0 * np.sqrt((mi.ur * mi.e_comp(freq)- m1.ur * m1.e_comp(freq) * sin2_theta)/const.epsilon_0, dtype=np.clongdouble)
-        return k_x
-
-    def get_reflexion_TM(self, freq):
-        '''
-        Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
-        para ondas TM
-
-         freq : float - frecuencia de operacion en Hz
-        Returns:
-        tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
-
-        '''
-        # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
-        m1 = self._layer_list[0]
-        k_1 = m1.k(freq)
-        Zeq = self._layer_list[-1].Zo_from_theta_i_TM(freq, self.theta_i, k_1)
-
-        # Para cada medio intermedio, calculo su impedancia de entrada equivalente
-        # teniendo en cuenta todas las capas anteriores.
-        for mi in reversed(self._layer_list[1:-1]):
-            Zi = mi.Zo_from_theta_i_TM(freq, self.theta_i, k_1)
-            #print("### m1 ###") 
-            #print(m1)
-            #print("### mi ###")
-            #print(mi)
-            kL = self.k_x_i(freq=freq, mi=mi, m1=m1) * mi.width(freq)
-            #print(kL)
-            Zeq = self.Zin(Zi, Zeq, kL)
-            #print(Zeq)
-        Zi = self._layer_list[0].Zo_from_theta_i_TM(freq, self.theta_i, k_1)
-        Gamma_in = self.Gamma(Zi, Zeq)
-
-        return Gamma_in
-
-    def get_reflexion_TE(self, freq):
-        '''
-        Calculo de impedancia equivalente y perdidas acumuladas de toda la cadena de lineas
-        para ondas TM
-
-         freq : float - frecuencia de operacion en Hz
-        Returns:
-        tuple[complex, float] - (total impedancia equivalente, total perdidas acumuladas en dB)
-
-        '''
-        # Cargo la impedancia caracteristica de la capa final a donde se transmite la onda
-        m1 = self._layer_list[0]
-        k_1 = m1.k(freq)
-        Zeq = self._layer_list[-1].Zo_from_theta_i_TE(freq, self.theta_i, k_1)
-
-        # Para cada medio intermedio, calculo su impedancia de entrada equivalente
-        # teniendo en cuenta todas las capas anteriores.
-        for mi in reversed(self._layer_list[1:-1]):
-            Zi = mi.Zo_from_theta_i_TE(freq, self.theta_i, k_1)
-            kL = self.k_x_i(freq=freq, mi=mi, m1=m1) * mi.width(freq)
-            Zeq = self.Zin(Zi, Zeq, kL)
-        Zi = self._layer_list[0].Zo_from_theta_i_TE(freq, self.theta_i, k_1)
-        Gamma_in = self.Gamma(Zi, Zeq)
-
-        return Gamma_in
-    
-    def is_evanescent(self, k_x: complex, tol: float = 1e-8) -> bool:
-        return np.abs(np.real(k_x)) < tol and np.imag(k_x) > tol
-    
-    def theta_t(self, freq):
-        m1 = self._layer_list[0]
-        mN = self._layer_list[-1]
-        sin_theta_t = m1.k(freq) / mN.k(freq) * np.sin(self.theta_i)
-        #print(m1.k(freq), mN.k(freq), np.sin(self.theta_i), np.sin(self.theta_i), self.theta_i)
-        # Si es complejo o el argumento excede [-1, 1], entonces onda evanescente
-        if np.iscomplex(sin_theta_t) or not -1 <= np.real(sin_theta_t) <= 1:
-            return np.pi/2
-        
-        #print(np.arcsin(np.abs(sin_theta_t), dtype=np.longdouble))
-        return np.arcsin(np.abs(sin_theta_t), dtype=np.longdouble)
-    
+    # Ángulo de incidencia
     @property
     def theta_i(self):
         return self._theta_1
 
     @theta_i.setter
     def theta_i(self, value):
-        if 0 <= value <= np.pi/2:
+        if 0 <= value <= np.pi / 2:
             self._theta_1 = value
 
-    @property
-    def theta_r(self):
-        return self.theta_i
-    
-    
+    # Cálculo de k_x para cada medio usando Snell y k de la primera capa
+    def k_x_i(self, freq, mi: Medium, m1: Medium):
+        """
+        Devuelve el componente normal del número de onda en la capa 'mi', a partir
+        del ángulo en la primera capa y del número de onda de la primera capa (k1).
+        Se usa: k_x = k0 * sqrt(μ_r,i ε_r,i - μ_r,1 ε_r,1 sin² θ_i).
+        """
+        k0 = 2 * np.pi * freq / const.c
+        sin2_theta = np.sin(self.theta_i) ** 2
+        eps_cr_i = mi.e_comp(freq) / const.epsilon_0      # ε_r compleja de la capa i
+        eps_cr_1 = m1.e_comp(freq) / const.epsilon_0      # ε_r compleja de la primera capa
+        expr = mi.ur * eps_cr_i - m1.ur * eps_cr_1 * sin2_theta
+        return k0 * np.sqrt(expr)
 
+    # Impedancia de entrada equivalente a distancia L en una línea (función auxiliar)
+    def Zin(self, Zi, Zl, kL):
+        """
+        Impedancia de entrada vista a una distancia L de la carga Zl en una línea de
+        transmisión con impedancia característica Zi.
+        Z_in = Zi * (Zl + j Zi tan(kL)) / (Zi + j Zl tan(kL))
+        """
+        return Zi * (Zl + 1j * Zi * np.tan(kL)) / (Zi + 1j * Zl * np.tan(kL))
+
+    # Coeficiente de reflexión en una interfaz
+    def Gamma(self, Zo, Zl):
+        return (Zl - Zo) / (Zl + Zo)
+
+    # Cálculo de SE para polarización TM
+    def get_se_TM(self, freq):
+        """
+        Devuelve la razón de amplitudes E_inc/E_trans para onda TM.
+        Si se desea la SE en dB, usar 20*log10(abs(se)).
+        """
+        m1 = self._layer_list[0]
+        mN = self._layer_list[-1]
+        k1 = m1.k(freq)
+        # Impedancia de entrada y salida usando Snell
+        eta_i = m1.Zo_from_theta_i_TM(freq, self.theta_i, k1)
+        eta_s = mN.Zo_from_theta_i_TM(freq, self.theta_i, k1)
+        # Construir la matriz ABCD total
+        T_total = np.identity(2, dtype=complex)
+        for mi in self._layer_list[1:-1]:
+            k_x = self.k_x_i(freq, mi, m1)
+            Ti = mi.T_TM(freq, self.theta_i, k1, k_x)
+            T_total = T_total @ Ti
+        A, B = T_total[0, 0], T_total[0, 1]
+        C, D = T_total[1, 0], T_total[1, 1]
+        # Coeficiente de transmisión según red ABCD y puertos con impedancias eta_i y eta_s
+        denom = A * eta_s + B + C * eta_s * eta_i + D * eta_i
+        t = (2 * eta_s) / denom
+        se = 1 / t  # razón Ei/Et
+        return se
+
+    # Cálculo de SE para polarización TE
+    def get_se_TE(self, freq):
+        """
+        Devuelve la razón de amplitudes E_inc/E_trans para onda TE.
+        Si se desea la SE en dB, usar 20*log10(abs(se)).
+        """
+        m1 = self._layer_list[0]
+        mN = self._layer_list[-1]
+        k1 = m1.k(freq)
+        eta_i = m1.Zo_from_theta_i_TE(freq, self.theta_i, k1)
+        eta_s = mN.Zo_from_theta_i_TE(freq, self.theta_i, k1)
+        T_total = np.identity(2, dtype=complex)
+        for mi in self._layer_list[1:-1]:
+            k_x = self.k_x_i(freq, mi, m1)
+            Ti = mi.T_TE(freq, self.theta_i, k1, k_x)
+            T_total = T_total @ Ti
+        A, B = T_total[0, 0], T_total[0, 1]
+        C, D = T_total[1, 0], T_total[1, 1]
+        denom = A * eta_s + B + C * eta_s * eta_i + D * eta_i
+        t = (2 * eta_s) / denom
+        se = 1 / t
+        return se
+
+    # Cálculo de reflexión total para TM
+    def get_reflexion_TM(self, freq):
+        """
+        Calcula el coeficiente de reflexión total en el puerto de entrada para ondas TM.
+        """
+        m1 = self._layer_list[0]
+        mN = self._layer_list[-1]
+        k1 = m1.k(freq)
+        eta_i = m1.Zo_from_theta_i_TM(freq, self.theta_i, k1)
+        eta_s = mN.Zo_from_theta_i_TM(freq, self.theta_i, k1)
+        # Construcción de la matriz ABCD total
+        T_total = np.identity(2, dtype=complex)
+        for mi in self._layer_list[1:-1]:
+            k_x = self.k_x_i(freq, mi, m1)
+            Ti = mi.T_TM(freq, self.theta_i, k1, k_x)
+            T_total = T_total @ Ti
+        A, B = T_total[0, 0], T_total[0, 1]
+        C, D = T_total[1, 0], T_total[1, 1]
+        # Coeficiente de reflexión en el puerto 1
+        num = A * eta_s + B - C * eta_s * eta_i - D * eta_i
+        den = A * eta_s + B + C * eta_s * eta_i + D * eta_i
+        return num / den
+
+    # Cálculo de reflexión total para TE
+    def get_reflexion_TE(self, freq):
+        """
+        Calcula el coeficiente de reflexión total en el puerto de entrada para ondas TE.
+        """
+        m1 = self._layer_list[0]
+        mN = self._layer_list[-1]
+        k1 = m1.k(freq)
+        eta_i = m1.Zo_from_theta_i_TE(freq, self.theta_i, k1)
+        eta_s = mN.Zo_from_theta_i_TE(freq, self.theta_i, k1)
+        T_total = np.identity(2, dtype=complex)
+        
+        for mi in self._layer_list[1:-1]:
+            k_x = self.k_x_i(freq, mi, m1)
+            Ti = mi.T_TE(freq, self.theta_i, k1, k_x)
+            T_total = T_total @ Ti
+            
+        A, B = T_total[0, 0], T_total[0, 1]
+        C, D = T_total[1, 0], T_total[1, 1]
+        
+        num = A * eta_s + B - C * eta_s * eta_i - D * eta_i
+        den = A * eta_s + B + C * eta_s * eta_i + D * eta_i
+        
+        return num / den
+
+    def is_evanescent(self, k_x: complex, tol: float = 1e-8) -> bool:
+        """
+        Comprueba si una onda es evanescente: parte real ~0 y parte imaginaria >0.
+        """
+        return np.abs(np.real(k_x)) < tol and np.imag(k_x) > tol
+
+    def theta_t(self, freq):
+        """
+        Calcula el ángulo transmitido en la última capa a partir de Snell. Si el resultado
+        es complejo o no está en [-1,1], devuelve pi/2 (onda evanescente).
+        """
+        m1 = self._layer_list[0]
+        mN = self._layer_list[-1]
+        sin_theta_t = m1.k(freq) / mN.k(freq) * np.sin(self.theta_i)
+        if np.iscomplex(sin_theta_t) or not -1 <= np.real(sin_theta_t) <= 1:
+            return np.pi / 2
+        return np.arcsin(np.abs(sin_theta_t))
 
 
 if __name__ == "__main__":
