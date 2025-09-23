@@ -240,13 +240,8 @@ class AnnotatedCursor(Cursor):
         Overridden clear callback for cursor, called before drawing the figure.
         """
 
-        # The base class saves the clean background for blitting.
-        # Text and cursor are invisible,
-        # until the first mouse move event occurs.
-        super().clear(event)
-        if self.ignore(event):
-            return
         self.text.set_visible(False)
+        super().clear(event)
 
     def _update(self):
         """
