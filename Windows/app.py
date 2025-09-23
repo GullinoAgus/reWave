@@ -9,6 +9,8 @@ from Utils.Medium import Medium
 
 units_dict = {'GHz': 1e9, 'MHz': 1e6, 'KHz': 1e3, 'Hz': 1}
 
+def sanitize_values(value, epsilon=1e-6, min_val=0):
+    return value if value >= epsilon else min_val
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -28,7 +30,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.sigma_input.setValidator(self.scientific_validator)
         self.width_input.setValidator(self.scientific_validator)
 
-        self.layer_list: list[LayerWidget] = []
+        self.layer_list: list['LayerWidget'] = []
 
     def next_plot(self):
         self.plots.setCurrentIndex((self.plots.currentIndex() + 1) % self.plots.count())
@@ -42,7 +44,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if layer.isConnected():
                 layers.append(LayerWidget.to_medium(layer))
         return layers
-    
+
     def calculate(self):
         '''
         Calculo de la eficiencia de apantallamiento o de 
@@ -53,6 +55,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         T = []
         EA = []
         ref = []
+        A = []
         R = []
 
         # Se construye la lista de medios a partir de los widgets de capas
@@ -87,11 +90,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 tau = 1/se
                 transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
 
-                ref.append(np.abs(refl)) #Coef. de reflexion
-                trans.append(np.abs(tau))
-                T.append(np.abs(transmit))
-                R.append(ref[-1]**2) # Fraccion de potencia reflejada
-                EA.append(20 * np.log10(np.abs(se)))
+                ref.append(sanitize_values(np.abs(refl))) #Coef. de reflexion
+                trans.append(sanitize_values(np.abs(tau)))
+                T.append(sanitize_values(np.abs(transmit)))
+                R.append(sanitize_values(ref[-1]**2)) # Fraccion de potencia reflejada
+                A.append(sanitize_values(1 - R[-1] - T[-1])) # Fraccion de potencia absorbida
+                EA.append(sanitize_values(20 * np.log10(np.abs(se))))
 
         else:  # Barrido de freq
             # Armo la cadena de lineas de transmision equivalente
@@ -113,14 +117,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 tau = 1/se
                 transmit = np.abs(tau)**2 * (eta_i/eta_s) * (np.cos(net.theta_t(freq))/np.cos(self.theta_i))
 
-                ref.append(np.abs(refl)) #Coef. de reflexion
-                trans.append(np.abs(tau))
-                T.append(np.abs(transmit))
-                R.append(ref[-1]**2) # Fraccion de potencia reflejada
-                EA.append(20 * np.log10(np.abs(se)))
+                ref.append(sanitize_values(np.abs(refl))) #Coef. de reflexion
+                trans.append(sanitize_values(np.abs(tau)))
+                T.append(sanitize_values(np.abs(transmit)))
+                R.append(sanitize_values(ref[-1]**2)) # Fraccion de potencia reflejada
+                A.append(sanitize_values(1 - R[-1] - T[-1]))
+                EA.append(sanitize_values(20 * np.log10(np.abs(se))))
 
-        self.coef_1_plot.plot_for_freq(x, ref, trans, y_label1='$|\\Gamma|$', y_label2='$|\\tau|$', ax1_label="Coef. de Reflexión", ax2_label="Coef. de Transmisión", unit=unit, xlims=xlim)
-        self.coef_2_plot.plot_for_freq(x, R, T, y_label1='$R$', y_label2='$T$', ax1_label="Frac. Potencia Reflejada", ax2_label="Frac. Potencia Transmitida", unit=unit, xlims=xlim)
+        self.coef_1_plot.plot_for_freq(x, [ref, trans], 
+                                       y_labels=['$|\\Gamma|$', '$|\\tau|$'], 
+                                       x_labels=["Coef. de Reflexión", "Coef. de Transmisión"],
+                                       unit=unit, xlims=xlim)
+        self.coef_2_plot.plot_for_freq(x, [R, T, A], 
+                                       y_labels=['$R$','$T$', '$A$'],
+                                       x_labels=["Frac. Potencia Reflejada","Frac. Potencia Transmitida","Frac. Potencia Absorbida",],
+                                       unit=unit, xlims=xlim)
     
         self.apant_plot.plot_efficiency(x, EA, unit=unit)
 
@@ -274,11 +285,6 @@ class LayerWidget(QtWidgets.QWidget):
         self.boxlayout.addWidget(self.leftArrowButt, 0, 0)
         self.leftArrowButt.clicked.connect(
             lambda: swap_handler(self.layer_num, -1))
-        self.deleteButt = QtWidgets.QPushButton(self.infoViewBox)
-        self.deleteButt.setIcon(QtGui.QIcon.fromTheme('user-trash'))
-        self.boxlayout.addWidget(self.deleteButt, 0, 1)
-        self.deleteButt.clicked.connect(
-            lambda: delete_handler(self.layer_num))
         self.ConnectedCheck = QtWidgets.QCheckBox(
             'Habilitada', self.infoViewBox)
         self.ConnectedCheck.setChecked(True)
@@ -291,43 +297,64 @@ class LayerWidget(QtWidgets.QWidget):
         self.mu_input.setObjectName("mu_input")
         self.mu_input.setValidator(self.scientific_validator)
         self.boxlayout.addWidget(self.mu_input, 2, 1, 1, 1)
-        self.sigma_label = QtWidgets.QLabel(self.infoViewBox)
-        self.sigma_label.setMaximumSize(QtCore.QSize(16777215, 30))
-        self.sigma_label.setObjectName("sigma_label")
-        self.boxlayout.addWidget(self.sigma_label, 4, 0, 1, 1)
+
+        # Labels
         self.mu_label = QtWidgets.QLabel(self.infoViewBox)
         self.mu_label.setObjectName("mu_label")
         self.boxlayout.addWidget(self.mu_label, 2, 0, 1, 1)
-        self.width_label = QtWidgets.QLabel(self.infoViewBox)
-        self.width_label.setObjectName("width_label")
-        self.boxlayout.addWidget(self.width_label, 5, 0, 1, 1)
+
         self.epsilon_label = QtWidgets.QLabel(self.infoViewBox)
         self.epsilon_label.setObjectName("epsilon_label")
         self.boxlayout.addWidget(self.epsilon_label, 3, 0, 1, 1)
+
+        self.width_label = QtWidgets.QLabel(self.infoViewBox)
+        self.width_label.setObjectName("width_label")
+        self.boxlayout.addWidget(self.width_label, 5, 0, 1, 1)
+
+        # Inputs
+        self.epsilon_input = QtWidgets.QLineEdit(self.infoViewBox)
+        self.epsilon_input.setObjectName("epsilon_input")
+        self.epsilon_input.setValidator(self.scientific_validator)
+        self.boxlayout.addWidget(self.epsilon_input, 3, 1, 1, 1)
+
         self.width_input = QtWidgets.QLineEdit(self.infoViewBox)
         self.width_input.setObjectName("width_input")
         self.width_input.setValidator(self.scientific_validator)
         self.boxlayout.addWidget(self.width_input, 5, 1, 1, 1)
+
         self.width_unit_CB = QtWidgets.QComboBox(self.infoViewBox)
         self.width_unit_CB.setObjectName("width_unit_CB")
         self.width_unit_CB.addItem("")
         self.width_unit_CB.addItem("")
         self.boxlayout.addWidget(self.width_unit_CB, 5, 2, 1, 1)
+
+        # --- NUEVO: Selector de tipo de pérdida (σ o ε_i) + input ---
+        self.loss_label = QtWidgets.QLabel(self.infoViewBox)
+        self.loss_label.setMaximumSize(QtCore.QSize(16777215, 30))
+        self.loss_label.setObjectName("loss_label")
+        self.boxlayout.addWidget(self.loss_label, 4, 0, 1, 1)
+
         self.loss_input = QtWidgets.QLineEdit(self.infoViewBox)
         self.loss_input.setMaxLength(100)
-        self.loss_input.setObjectName("sigma_input")
+        self.loss_input.setObjectName("loss_input")
         self.loss_input.setValidator(self.scientific_validator)
         self.boxlayout.addWidget(self.loss_input, 4, 1, 1, 1)
-        self.epsilon_input = QtWidgets.QLineEdit(self.infoViewBox)
-        self.epsilon_input.setObjectName("epsilon_input")
-        self.epsilon_input.setValidator(self.scientific_validator)
-        self.boxlayout.addWidget(self.epsilon_input, 3, 1, 1, 1)
+
+        self.loss_kind_CB = QtWidgets.QComboBox(self.infoViewBox)
+        self.loss_kind_CB.setObjectName("loss_kind_CB")
+        self.loss_kind_CB.addItem("σ")
+        self.loss_kind_CB.addItem("ε_i")
+        self.boxlayout.addWidget(self.loss_kind_CB, 4, 2, 1, 1)
+
+        # Otros campos
         self.layer_name_input = QtWidgets.QLineEdit(self.infoViewBox)
         self.layer_name_input.setObjectName("layer_name_input")
         self.boxlayout.addWidget(self.layer_name_input, 6, 1, 1, 1)
+
         self.layer_name_label = QtWidgets.QLabel(self.infoViewBox)
         self.layer_name_label.setObjectName("layer_name_label")
         self.boxlayout.addWidget(self.layer_name_label, 6, 0, 1, 1)
+
         self.layer_type = QtWidgets.QLabel(self.infoViewBox)
         self.layer_type.setObjectName("layer_name_label")
         myFont = QtGui.QFont()
@@ -336,23 +363,55 @@ class LayerWidget(QtWidgets.QWidget):
         self.layer_type.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.boxlayout.addWidget(self.layer_type, 7, 0, 1, 3)
 
+        # Inicializaciones de texto
         self.mu_input.setText(locale.str(self.mur))
         self.mu_label.setText("μr")
         self.width_label.setText("Espesor")
         self.epsilon_label.setText("εr")
-        self.sigma_label.setText("σ")
+        self.loss_label.setText("Pérdida")
         self.width_input.setText(locale.str(self.layer_width))
         self.width_unit_CB.setItemText(0, "λs")
         self.width_unit_CB.setItemText(1, "mm")
         self.width_unit_CB.setCurrentIndex(1 if width_unit == 'mm' else 0)
         
-        self.loss_input.setText((locale.str(self.sigma)))
+        # Por compatibilidad: arrancar con σ
+        self.loss_input.setText(locale.str(self.sigma))
         self.epsilon_input.setText(locale.str(self.er))
         self.layer_name_label.setText("Nombre")
         self.layer_name_input.setText(self.name)
         self.layer_type.setText(layer_type)
         self.set_type(layer_type)
-    
+
+        # Placeholder dinámico para la unidad del valor de pérdida
+        self.loss_kind_CB.currentIndexChanged.connect(self._update_loss_placeholder)
+        self._update_loss_placeholder(self.loss_kind_CB.currentIndex())
+
+        self.boxlayout.addItem(
+            QtWidgets.QSpacerItem(
+                0, 0,|
+                QtWidgets.QSizePolicy.Policy.Minimum,
+                QtWidgets.QSizePolicy.Policy.Expanding
+            ),
+            8, 0, 1, 3  # fila 8, ocupa 3 columnas
+        )
+
+        # Botón de tacho abajo, centrado
+        self.deleteButt = QtWidgets.QPushButton(self.infoViewBox)
+        self.deleteButt.setIcon(QtGui.QIcon.fromTheme('user-trash'))
+        self.deleteButt.setIconSize(QtCore.QSize(18, 18))
+        self.deleteButt.setFixedSize(26, 26)
+        self.boxlayout.addWidget(
+            self.deleteButt, 9, 0, 1, 3,
+            alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
+        self.deleteButt.clicked.connect(lambda: delete_handler(self.layer_num))
+
+    def _update_loss_placeholder(self, index: int):
+        if index == 0:
+            self.loss_input.setPlaceholderText("S/m")        # sigma
+        else:
+            self.loss_input.setPlaceholderText("ε_i") # epsilon_i
+
     def setConnected(self, en):
         self.connected = en
 
@@ -377,17 +436,33 @@ class LayerWidget(QtWidgets.QWidget):
             self.width_unit_CB.setVisible(True)
 
     def to_medium(self):
+        """
+        Construye Medium respetando el selector de pérdidas:
+          - Si 'σ': usa sigma_value y eps_i=0
+          - Si 'ε_i': fuerza sigma=0 y anota eps_i en el Medium
+        """
+        sigma = self.sigma_value  # devolverá 0.0 si está en modo eps_i
         if self.width_unit_CB.currentText() == "mm":
             med = Medium(ur=self.mu_value,
-                         sigma=self.sigma_value,
+                         sigma=sigma,
                          er=self.epsilon_value,
                          width=self.width_value * 1e-3)
         else:
             med = Medium(ur=self.mu_value,
-                         sigma=self.sigma_value,
+                         sigma=sigma,
                          er=self.epsilon_value,
                          width_lambdas=self.width_value)
+
+        # Anotar modo de pérdidas para que el backend lo use si corresponde
+        med.loss_model = self.loss_kind             # 'sigma' o 'eps_i'
+        med.eps_i = self.eps_i_value                # 0.0 si es 'sigma'
         return med
+
+    # --- NUEVO: getters de pérdidas ---
+    @property
+    def loss_kind(self) -> str:
+        """Devuelve 'sigma' o 'eps_i' según el combo."""
+        return 'sigma' if self.loss_kind_CB.currentIndex() == 0 else 'eps_i'
 
     @property
     def mu_value(self):
@@ -399,7 +474,17 @@ class LayerWidget(QtWidgets.QWidget):
 
     @property
     def sigma_value(self):
-        return locale.atof(self.loss_input.text())
+        """Valor de σ (S/m) si está seleccionado; si no, 0.0 para no mezclar modelos."""
+        if self.loss_kind == 'sigma':
+            return float(locale.atof(self.loss_input.text()))
+        return 0.0
+
+    @property
+    def eps_i_value(self):
+        """Valor de ε_i (parte imaginaria de εr) si está seleccionado; si no, 0.0."""
+        if self.loss_kind == 'eps_i':
+            return float(locale.atof(self.loss_input.text()))
+        return 0.0
 
     @property
     def width_value(self):
