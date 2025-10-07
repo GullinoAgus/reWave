@@ -1,6 +1,7 @@
 import locale
 import numpy as np
 from PyQt6 import QtWidgets, QtGui, QtCore
+import re
 
 from UI.Main_UI import Ui_MainWindow
 from Utils.TLNetwork import TLineNetwork
@@ -14,6 +15,75 @@ def sanitize_values(value, epsilon=1e-6, min_val=0):
     return value if value >= epsilon else min_val
 
 
+class ScientificDoubleSpinBox(QtWidgets.QDoubleSpinBox):
+    """QDoubleSpinBox que acepta notación científica (1E6, 2,5E-3, etc.) con coma como separador decimal"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setKeyboardTracking(False)
+        
+    def validate(self, input_text, pos):
+        """Valida que el texto sea un número válido en notación científica o decimal con coma"""
+        if not input_text.strip():
+            return QtGui.QValidator.State.Intermediate, input_text, pos
+            
+        # Patrón para notación científica con coma: opcional signo, dígitos, opcional coma decimal, opcional E/e con exponente
+        scientific_pattern = r'^[+-]?(\d+,?\d*|,\d+)([eE][+-]?\d+)?$'
+        
+        if re.match(scientific_pattern, input_text.strip()):
+            try:
+                # Convertir coma a punto para evaluación
+                normalized_text = input_text.replace(',', '.')
+                value = float(normalized_text)
+                if self.minimum() <= value <= self.maximum():
+                    return QtGui.QValidator.State.Acceptable, input_text, pos
+                else:
+                    return QtGui.QValidator.State.Invalid, input_text, pos
+            except ValueError:
+                return QtGui.QValidator.State.Invalid, input_text, pos
+        
+        # Permitir entrada parcial válida
+        partial_pattern = r'^[+-]?(\d*,?\d*([eE][+-]?\d*)?)?$'
+        if re.match(partial_pattern, input_text.strip()):
+            return QtGui.QValidator.State.Intermediate, input_text, pos
+            
+        return QtGui.QValidator.State.Invalid, input_text, pos
+    
+    def valueFromText(self, text):
+        """Convierte texto a valor numérico, manejando notación científica con coma"""
+        try:
+            # Convertir coma a punto para evaluación
+            normalized_text = text.strip().replace(',', '.')
+            return float(normalized_text)
+        except ValueError:
+            return 0.0
+    
+    def textFromValue(self, value):
+        """Convierte valor numérico a texto con coma como separador decimal"""
+        # Si el valor es muy grande o muy pequeño, usar notación científica
+        if abs(value) >= 1e6 or (abs(value) < 1e-3 and value != 0):
+            result = f"{value:.3e}"
+        else:
+            # Usar formato decimal normal, eliminando ceros innecesarios
+            if value == int(value):
+                result = str(int(value))
+            else:
+                result = f"{value:.{self.decimals()}f}".rstrip('0').rstrip('.')
+        
+        # Convertir punto a coma
+        return result.replace('.', ',')
+    
+    def fixup(self, input_text):
+        """Corrige automáticamente entrada inválida"""
+        try:
+            normalized_text = input_text.strip().replace(',', '.')
+            value = float(normalized_text)
+            value = max(self.minimum(), min(self.maximum(), value))
+            return str(value).replace('.', ',')
+        except ValueError:
+            return str(self.minimum()).replace('.', ',')
+
+
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -25,7 +95,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.coef_2_plot = MplCanvas(self.gammas_2)
         self.apant_plot = MplCanvas(self.se)
 
-        self.scientific_validator = QtGui.QDoubleValidator()
+        # Validador personalizado que acepta notación científica con coma
+        class ScientificValidator(QtGui.QValidator):
+            def validate(self, input_text, pos):
+                if not input_text.strip():
+                    return QtGui.QValidator.State.Intermediate, input_text, pos
+                
+                # Patrones que aceptan coma como separador decimal
+                scientific_pattern = r'^[+-]?(\d+,?\d*|,\d+)([eE][+-]?\d+)?$'
+                partial_pattern = r'^[+-]?(\d*,?\d*([eE][+-]?\d*)?)?$'
+                
+                if re.match(scientific_pattern, input_text.strip()):
+                    return QtGui.QValidator.State.Acceptable, input_text, pos
+                elif re.match(partial_pattern, input_text.strip()):
+                    return QtGui.QValidator.State.Intermediate, input_text, pos
+                else:
+                    return QtGui.QValidator.State.Invalid, input_text, pos
+        
+        self.scientific_validator = ScientificValidator()
         # Validadores en inputs globales de la UI
         self.mu_input.setValidator(self.scientific_validator)
         self.epsilon_input.setValidator(self.scientific_validator)
@@ -75,7 +162,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Calculo de la eficiencia de apantallamiento o de
         los coeficientes en funcion de si es barrido de angulo o frecuencia
         """
-        trans, T, EA, ref, A, R = [], [], [], [], [], []
+        trans, ref, T, R, A, EA, R_se, A_se, M_se = [], [], [], [], [], [], [], [], []
 
         # Se construye la lista de medios a partir de los widgets de capas
         layers = self.create_layers()
@@ -96,16 +183,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 net = TLineNetwork(layers, theta)
                 if self.polarization_CB.currentText() == "TM":
                     refl = net.get_reflexion_TM(freq)
-                    se = net.get_se_TM(freq)
+                    se = net.get_se(freq, pol='TM')
+                    if isinstance(se, tuple) and len(se) == 4:
+                        se_total, R_val, A_val, M_val = se
+                    else:
+                        se_total, R_val, A_val, M_val = se, None, None, None
+
                     eta_i = net._layer_list[0].Zo_TM(freq, self.theta_i)
                     eta_s = net._layer_list[-1].Zo_TM(freq, self.theta_i)
                 else:
                     refl = net.get_reflexion_TE(freq)
-                    se = net.get_se_TE(freq)  # Ei/Et
+                    se = net.get_se(freq, pol='TE')
+                    if isinstance(se, tuple) and len(se) == 4:
+                        se_total, R_val, A_val, M_val = se
+                    else:
+                        se_total, R_val, A_val, M_val = se, None, None, None
+
                     eta_i = net._layer_list[0].Zo_TE(freq, self.theta_i)
                     eta_s = net._layer_list[-1].Zo_TE(freq, self.theta_i)
 
-                tau = 1 / se
+                tau = 1 / se_total
                 transmit = np.abs(tau) ** 2 * (eta_i / eta_s) * (np.cos(net.theta_t(freq)) / np.cos(self.theta_i))
 
                 ref.append(sanitize_values(np.abs(refl)))
@@ -113,22 +210,35 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 T.append(sanitize_values(np.abs(transmit)))
                 R.append(sanitize_values(ref[-1] ** 2))
                 A.append(sanitize_values(1 - R[-1] - T[-1]))
-                EA.append(sanitize_values(20 * np.log10(np.abs(se))))
+                EA.append(sanitize_values(20 * np.log10(np.abs(se_total))))
+                R_se.append(20 * np.log10(np.abs(R_val) if R_val is not None else None))
+                A_se.append(20 * np.log10(np.abs(A_val) if A_val is not None else None))
+                M_se.append(20 * np.log10(np.abs(M_val) if M_val is not None else None))
         else:  # Barrido de frecuencia
             net = TLineNetwork(layers, self.theta_i)
             for freq in x:
                 if self.polarization_CB.currentText() == "TM":
                     refl = net.get_reflexion_TM(freq)
-                    se = net.get_se_TM(freq)
+                    se = net.get_se(freq, pol='TM')
+                    if isinstance(se, tuple) and len(se) == 4:
+                        se_total, R_val, A_val, M_val = se
+                    else:
+                        se_total, R_val, A_val, M_val = se, None, None, None
+
                     eta_i = net._layer_list[0].Zo_TM(freq, self.theta_i)
                     eta_s = net._layer_list[-1].Zo_TM(freq, self.theta_i)
                 else:
                     refl = net.get_reflexion_TE(freq)
-                    se = net.get_se_TE(freq)  # Ei/Et
+                    se = net.get_se(freq, pol='TE')  # Ei/Et
+                    if isinstance(se, tuple) and len(se) == 4:
+                        se_total, R_val, A_val, M_val = se
+                    else:
+                        se_total, R_val, A_val, M_val = se, None, None, None
+
                     eta_i = net._layer_list[0].Zo_TE(freq, self.theta_i)
                     eta_s = net._layer_list[-1].Zo_TE(freq, self.theta_i)
 
-                tau = 1 / se
+                tau = 1 / se_total
                 transmit = np.abs(tau) ** 2 * (eta_i / eta_s) * (np.cos(net.theta_t(freq)) / np.cos(self.theta_i))
 
                 ref.append(sanitize_values(np.abs(refl)))
@@ -136,7 +246,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 T.append(sanitize_values(np.abs(transmit)))
                 R.append(sanitize_values(ref[-1] ** 2))
                 A.append(sanitize_values(1 - R[-1] - T[-1]))
-                EA.append(sanitize_values(20 * np.log10(np.abs(se))))
+                EA.append(sanitize_values(20 * np.log10(np.abs(se_total))))
+                R_se.append(20 * np.log10(np.abs(R_val) if R_val is not None else None))
+                A_se.append(20 * np.log10(np.abs(A_val) if A_val is not None else None))
+                M_se.append(20 * np.log10(np.abs(M_val) if M_val is not None else None))
 
         self.coef_1_plot.plot_for_freq(
             x, [ref, trans],
@@ -146,11 +259,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         )
         self.coef_2_plot.plot_for_freq(
             x, [R, T, A],
-            y_labels=['$R$', '$T$', '$A$'],
-            x_labels=["Frac. Potencia Reflejada", "Frac. Potencia Transmitida", "Frac. Potencia Absorbida"],
-            unit=unit, xlims=xlim
+            y_labels=[r"$R$", r"$T$", r"$A$"],
+            x_labels=[
+                r"$\langle S \rangle_{\mathrm{reflejado}}$",
+                r"$\langle S \rangle_{\mathrm{transmitido}}$",
+                r"$\langle S \rangle_{\mathrm{absorbido}}$"
+            ],
+            unit=unit,
+            xlims=xlim
         )
-        self.apant_plot.plot_efficiency(x, EA, unit=unit)
+
+        # Verificar si tenemos componentes R, A, M válidos para plotear
+        has_components = (R_se[0] is not None and A_se[0] is not None and M_se[0] is not None)
+        
+        if has_components:
+            # Plotear SE total y componentes separados
+            self.apant_plot.plot_efficiency_with_components(x, EA, R_se, A_se, M_se, unit=unit)
+        else:
+            # Solo plotear SE total
+            self.apant_plot.plot_efficiency(x, EA, unit=unit)
 
         self.plots.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(1)
@@ -204,19 +331,39 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @property
     def mu_value(self):
-        return locale.atof(self.mu_input.text())
+        try:
+            # Convertir coma a punto antes de parsear
+            text = self.mu_input.text().strip().replace(',', '.')
+            return float(text)
+        except ValueError:
+            return 1.0  # Valor por defecto
 
     @property
     def epsilon_value(self):
-        return locale.atof(self.epsilon_input.text())
+        try:
+            # Convertir coma a punto antes de parsear
+            text = self.epsilon_input.text().strip().replace(',', '.')
+            return float(text)
+        except ValueError:
+            return 1.0  # Valor por defecto
 
     @property
     def sigma_value(self):
-        return locale.atof(self.sigma_input.text())
+        try:
+            # Convertir coma a punto antes de parsear
+            text = self.sigma_input.text().strip().replace(',', '.')
+            return float(text)
+        except ValueError:
+            return 0.0  # Valor por defecto
 
     @property
     def width_value(self):
-        return locale.atof(self.width_input.text())
+        try:
+            # Convertir coma a punto antes de parsear
+            text = self.width_input.text().strip().replace(',', '.')
+            return float(text)
+        except ValueError:
+            return 0.001  # Valor por defecto
 
     @property
     def width_unit(self):
@@ -228,15 +375,30 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @property
     def theta_i(self):
-        return locale.atof(self.incidence_input.text()) * np.pi / 180
+        try:
+            # Convertir coma a punto antes de parsear
+            text = self.incidence_input.text().strip().replace(',', '.')
+            return float(text) * np.pi / 180
+        except ValueError:
+            return 0.0  # Valor por defecto
 
     @property
     def min_freq(self):
-        return locale.atof(self.min_freq_input.text()) * units_dict[self.min_freq_unit_CB.currentText()]
+        try:
+            # Convertir coma a punto antes de parsear
+            text = self.min_freq_input.text().strip().replace(',', '.')
+            return float(text) * units_dict[self.min_freq_unit_CB.currentText()]
+        except ValueError:
+            return 1e6  # Valor por defecto: 1 MHz
 
     @property
     def max_freq(self):
-        return locale.atof(self.max_freq_input.text()) * units_dict[self.max_freq_unit_CB.currentText()]
+        try:
+            # Convertir coma a punto antes de parsear
+            text = self.max_freq_input.text().strip().replace(',', '.')
+            return float(text) * units_dict[self.max_freq_unit_CB.currentText()]
+        except ValueError:
+            return 1e9  # Valor por defecto: 1 GHz
 
     def layer_swap_handler(self, layer_num, direction):
         if (direction == -1 and layer_num == 0) or (direction == 1 and layer_num == len(self.layer_list) - 1):
@@ -449,7 +611,7 @@ class LayerWidget(QtWidgets.QWidget):
         cardLay.addLayout(form)
 
         def dspin(minv, maxv, step, decimals=6, suffix=""):
-            sp = QtWidgets.QDoubleSpinBox(card)
+            sp = ScientificDoubleSpinBox(card)  # Usar la clase personalizada
             sp.setRange(minv, maxv)
             sp.setDecimals(decimals)
             sp.setSingleStep(step)
@@ -472,7 +634,7 @@ class LayerWidget(QtWidgets.QWidget):
         self.mu_spin = dspin(0, 1e6, 0.1, 2)         # μr
         self.er_spin = dspin(0, 1e6, 0.1, 2)         # εr
         self.loss_spin = dspin(0, 1e12, 0.1, 2)      # σ (S/m) o εi (rel)
-        self.width_spin = dspin(0, 1e9, 0.01, 2)     # d
+        self.width_spin = dspin(0, 1e9, 0.01, 8)     # d - mayor precisión decimal
 
         self.loss_kind_CB = QtWidgets.QComboBox(card)
         self.loss_kind_CB.addItems(["σ (S/m)", "εi (rel.)"])
@@ -503,6 +665,13 @@ class LayerWidget(QtWidgets.QWidget):
         form.addRow(self.width_label, d_box)
         form.addRow("name", self.layer_name_input)
 
+        # Configuración especial para width_spin - mayor rango dinámico
+        self.width_spin.setProperty("showGroupSeparator", False)
+        self.width_spin.setDecimals(8)  # Permitir hasta 8 decimales
+        self.width_spin.setSingleStep(0.001)  # Paso más fino para mejor control
+        # Configurar para que se adapte automáticamente al contenido
+        self.width_spin.setKeyboardTracking(True)
+        
         # Inicialización de valores
         self.mu_spin.setValue(float(mur))
         self.er_spin.setValue(float(er))

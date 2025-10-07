@@ -160,6 +160,9 @@ class Medium:
         D = A
         return np.array([[A, B], [C, D]])
 
+    def is_air(self):
+        return (self.er == 1.0) and (self.ur == 1.0) and (self.sigma == 0.0)
+
     def __repr__(self) -> str:
         lm = getattr(self, "loss_model", "sigma")
         ei = getattr(self, "eps_i", 0.0)

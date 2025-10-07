@@ -49,9 +49,103 @@ class TLineNetwork:
     # Coeficiente de reflexión en una interfaz
     def Gamma(self, Zo, Zl):
         return (Zl - Zo) / (Zl + Zo)
+    
+    def get_se(self, freq, pol='TM'):
+        if len(self._layer_list) == 3 and self._layer_list[0].is_air() and self._layer_list[-1].is_air():
+            if pol.upper() == 'TM':
+                return self.get_se_TM(freq)
+            elif pol.upper() == 'TE':
+                return self.get_se_TE(freq)
+        else:
+            if pol.upper() == 'TM':
+                return self.get_matrix_se_TM(freq)
+            elif pol.upper() == 'TE':
+                return self.get_matrix_se_TE(freq)
+            
+    def get_se_TM(self, freq):
+        """
+        Calcula la Efectividad de Blindaje (SE) para polarización TM en el caso de 3 capas (single shield).
+        Utiliza las fórmulas (4.20-4.23) del libro de Celozzi & Araneo y descompone la SE en:
+        SE = R + A + M, donde:
+        - R: reflection loss
+        - A: absorption loss  
+        - M: multiple reflection correction
+        
+        Returns:
+            tuple: (se, R, A, M) donde se es la SE total y R, A, M son los componentes en dB
+        """
+        
+        m1 = self._layer_list[0]  # Medio de entrada
+        m2 = self._layer_list[1]  # Shield (medio intermedio)
+        m3 = self._layer_list[2]  # Medio de salida
+
+        k1 = m1.k(freq)
+        kxs = self.k_x_i(freq, m2, m1)
+
+        Z1 = m1.Zo_from_theta_i_TM(freq, self.theta_i, k1)
+        Z2 = m2.Zo_from_theta_i_TM(freq, self.theta_i, k1)
+        Z3 = m3.Zo_from_theta_i_TM(freq, self.theta_i, k1)
+
+        d = m2.width(freq)
+        
+        # R: Reflection loss - ecuación (4.23a) generalizada
+        # R = |(Z1+Z2)(Z2+Z3)/(4*Z2*Z3)|
+        R = np.abs((Z1 + Z2) * (Z2 + Z3) / (4 * Z2 * Z3))
+        
+        # A: Absorption loss - ecuación (4.23b)
+        # A = 20*log10(|exp(j*kx2*d)|) = -8.686 * Im(kx2) * d
+        A = np.abs(np.exp(1j * kxs * d))
+        
+        # M: Multiple reflection correction - ecuación (4.23c) generalizada
+        # M = 20*log10(|1 - (Z1-Z2)(Z1-Z3)/[(Z1+Z2)(Z1+Z3)] * exp(-2j*kx2*d)|)
+        M = np.abs(
+            1.0 - ((Z1 - Z2)*(Z3 - Z2) / ((Z2 + Z1)*(Z2 + Z3))) * np.exp(-1j * 2.0 * kxs * d)
+        )
+        
+        return R*A*M, R, A, M
+
+    def get_se_TE(self, freq):
+        """
+        Calcula la Efectividad de Blindaje (SE) para polarización TE en el caso de 3 capas (single shield).
+        Utiliza las fórmulas (4.20-4.23) del libro de Celozzi & Araneo y descompone la SE en:
+        SE = R + A + M, donde:
+        - R: reflection loss
+        - A: absorption loss  
+        - M: multiple reflection correction
+        
+        Returns:
+            tuple: (se, R, A, M) donde se es la SE total y R, A, M son los componentes en veces
+        """
+        
+        m1 = self._layer_list[0]  # Medio de entrada
+        m2 = self._layer_list[1]  # Shield (medio intermedio)
+        m3 = self._layer_list[2]  # Medio de salida
+
+        k1 = m1.k(freq)
+        kxs = self.k_x_i(freq, m2, m1)
+
+        Z1 = m1.Zo_from_theta_i_TE(freq, self.theta_i, k1)
+        Z2 = m2.Zo_from_theta_i_TE(freq, self.theta_i, k1)
+        Z3 = m3.Zo_from_theta_i_TE(freq, self.theta_i, k1)
+
+        d = m2.width(freq)
+        
+        # R: Reflection loss - ecuación (4.23a) generalizada
+        # R = |(Z1+Z2)(Z2+Z3)/(4*Z2*Z3)|
+        R = np.abs((Z1 + Z2) * (Z2 + Z3) / (4 * Z2 * Z3))
+        
+        # A: Absorption loss - ecuación (4.23b)
+        # A = 20*log10(|exp(j*kx2*d)|) = -8.686 * Im(kx2) * d
+        A = np.abs(np.exp(1j * kxs * d))
+        
+        # M: Multiple reflection correction - ecuación (4.23c) generalizada
+        # M = 20*log10(|1 - (Z1-Z2)(Z2-Z3)/[(Z1+Z2)(Z2+Z3)] * exp(-2j*kx2*d)|)
+        M = np.abs(1.0 - ((Z1 - Z2)*(Z3 - Z2) / ((Z2 + Z1)*(Z2 + Z3))) * np.exp(-1j * 2.0 * kxs * d))
+        
+        return R*A*M, R, A, M
 
     # Cálculo de SE para polarización TM
-    def get_se_TM(self, freq):
+    def get_matrix_se_TM(self, freq):
         """
         Devuelve la razón de amplitudes E_inc/E_trans para onda TM.
         Si se desea la SE en dB, usar 20*log10(abs(se)).
@@ -77,10 +171,9 @@ class TLineNetwork:
         return se
 
     # Cálculo de SE para polarización TE
-    def get_se_TE(self, freq):
+    def get_matrix_se_TE(self, freq):
         """
         Devuelve la razón de amplitudes E_inc/E_trans para onda TE.
-        Si se desea la SE en dB, usar 20*log10(abs(se)).
         """
         m1 = self._layer_list[0]
         mN = self._layer_list[-1]

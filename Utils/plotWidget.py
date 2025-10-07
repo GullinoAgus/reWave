@@ -84,6 +84,46 @@ class MplCanvas(FigureCanvas):
 
         self.fig.canvas.draw()
 
+    def plot_efficiency_with_components(self, x, SE_total, R, A, M, unit='Frecuencia [Hz]', ylims=None, xlims=None):
+        """Plotea SE total y sus componentes R, A, M"""
+        self.axes.clear()
+        self.axes.format_coord = format_coord_piola
+        
+        # Plotear SE total y componentes con plot normal (no semilogx)
+        line1 = self.axes.plot(x, SE_total, 'b-', linewidth=2, label='SE Total')
+        line2 = self.axes.plot(x, R, 'r--', linewidth=1.5, label='R (Reflection)')
+        line3 = self.axes.plot(x, A, 'g--', linewidth=1.5, label='A (Absorption)')  
+        line4 = self.axes.plot(x, M, 'm--', linewidth=1.5, label='M (Multiple Refl.)')
+        
+        # Configuración igual que plot_efficiency
+        self.axes.yaxis.set_major_locator(self.y_locator)
+        self.axes.yaxis.set_major_formatter(self.y_formater)
+        self.axes.legend()
+        self.fig.set_constrained_layout(True)
+
+        # Data cursor para todas las líneas
+        all_lines = line1 + line2 + line3 + line4
+        self.dataCursor = mplcursors.cursor(all_lines, hover='Transient')
+        
+        # Escalas lineales (igual que plot_efficiency)
+        self.axes.set_xscale('linear')
+        self.axes.set_yscale('linear')
+        self.axes.grid(which='both')
+        self.axes.set_xlabel(f'{unit}')
+        self.axes.set_ylabel('Eficiencia [dB]')
+
+        # Límites (igual que plot_efficiency)
+        if hasattr(ylims, '__iter__'):
+            self.axes.set_ylim(ylims[0], ylims[1])
+
+        if hasattr(xlims, '__iter__'):
+            self.axes.set_xlim(xlims[0], xlims[1])
+        else:
+            xlims = self.axes.get_xlim()
+            self.axes.set_xlim(xlims[0], xlims[1])
+
+        self.fig.canvas.draw()
+
     def init_plot_layout(self, n_plots: int):
         """
         Crea la disposición de ejes según n_plots:
