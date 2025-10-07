@@ -56,6 +56,101 @@ class MplCanvas(FigureCanvas):
         self.fig.canvas.draw()
         super().resizeEvent(event)
 
+    def add_smart_coordinate_display(self, target_axes=None):
+        """Agrega una caja de coordenadas inteligente que se mueve para evitar el cursor"""
+        if target_axes is None:
+            target_axes = self.axes
+            
+        # Inicializar diccionario de cajas de texto si no existe
+        if not hasattr(self, 'coord_texts'):
+            self.coord_texts = {}
+            
+        # Crear caja de texto inicial para este eje específico
+        coord_text = target_axes.text(0.02, 0.98, '', transform=target_axes.transAxes,
+                                    fontsize=9, verticalalignment='top', horizontalalignment='left',
+                                    bbox=dict(boxstyle='round,pad=0.4', facecolor='lightyellow', 
+                                            alpha=0.9, edgecolor='gray', linewidth=0.8),
+                                    zorder=1000)
+        
+        # Guardar referencia usando el objeto axes como clave
+        self.coord_texts[target_axes] = coord_text
+        
+        # Conectar evento de movimiento del mouse (solo una vez)
+        if not hasattr(self, '_mouse_connected'):
+            self.fig.canvas.mpl_connect('motion_notify_event', self.on_smart_mouse_move)
+            self._mouse_connected = True
+    
+    def on_smart_mouse_move(self, event):
+        """Actualiza la caja de coordenadas con posicionamiento inteligente"""
+        if not hasattr(self, 'coord_texts'):
+            return
+            
+        # Limpiar todas las cajas de texto primero
+        for axes, coord_text in self.coord_texts.items():
+            coord_text.set_text('')
+        
+        # Encontrar el eje donde está el cursor
+        current_axes = event.inaxes
+        if current_axes in self.coord_texts:
+            coord_text = self.coord_texts[current_axes]
+            x, y = event.xdata, event.ydata
+            if x is not None and y is not None:
+                # Formato de coordenadas mejorado
+                if abs(x) >= 1000 or (abs(x) < 0.01 and x != 0):
+                    x_str = f'{x:.2e}'
+                else:
+                    x_str = f'{x:.3f}'
+                    
+                if abs(y) >= 1000 or (abs(y) < 0.01 and y != 0):
+                    y_str = f'{y:.2e}'
+                else:
+                    y_str = f'{y:.3f}'
+                
+                # Determinar posición inteligente basada en la posición del cursor
+                xlim = current_axes.get_xlim()
+                ylim = current_axes.get_ylim()
+                
+                # Para escalas log, usar log para normalización
+                try:
+                    if current_axes.get_xscale() == 'log' and x > 0:
+                        x_norm = (np.log10(x) - np.log10(xlim[0])) / (np.log10(xlim[1]) - np.log10(xlim[0]))
+                    else:
+                        x_norm = (x - xlim[0]) / (xlim[1] - xlim[0])
+                        
+                    if current_axes.get_yscale() == 'log' and y > 0:
+                        y_norm = (np.log10(y) - np.log10(ylim[0])) / (np.log10(ylim[1]) - np.log10(ylim[0]))
+                    else:
+                        y_norm = (y - ylim[0]) / (ylim[1] - ylim[0])
+                except (ValueError, ZeroDivisionError):
+                    # Fallback a posición por defecto si hay problemas con log
+                    x_norm, y_norm = 0.1, 0.9
+                
+                # Elegir esquina opuesta al cursor
+                if x_norm > 0.5 and y_norm > 0.5:
+                    # Cursor en esquina superior derecha -> texto en inferior izquierda
+                    h_align, v_align = 'left', 'bottom'
+                    text_x, text_y = 0.02, 0.02
+                elif x_norm > 0.5 and y_norm <= 0.5:
+                    # Cursor en esquina inferior derecha -> texto en superior izquierda
+                    h_align, v_align = 'left', 'top'
+                    text_x, text_y = 0.02, 0.98
+                elif x_norm <= 0.5 and y_norm > 0.5:
+                    # Cursor en esquina superior izquierda -> texto en inferior derecha
+                    h_align, v_align = 'right', 'bottom'
+                    text_x, text_y = 0.98, 0.02
+                else:
+                    # Cursor en esquina inferior izquierda -> texto en superior derecha
+                    h_align, v_align = 'right', 'top'
+                    text_x, text_y = 0.98, 0.98
+                
+                # Actualizar posición y texto
+                coord_text.set_position((text_x, text_y))
+                coord_text.set_horizontalalignment(h_align)
+                coord_text.set_verticalalignment(v_align)
+                coord_text.set_text(f'X: {x_str}\nY: {y_str}')
+        
+        self.fig.canvas.draw_idle()
+
     def plot_efficiency(self, x, EA, unit: str, ylims=None, xlims=None):
         self.axes.clear()
         self.axes.format_coord = format_coord_piola
@@ -66,9 +161,15 @@ class MplCanvas(FigureCanvas):
         #self.axes.legend()
         self.fig.set_constrained_layout(True)
 
-        self.dataCursor = mplcursors.cursor(line1, hover='Transient')
-        self.axes.set_xscale('linear')
-        self.axes.set_yscale('linear')
+        # Deshabilitar data cursor y usar display inteligente de coordenadas
+        # self.dataCursor = mplcursors.cursor(line1, hover='Transient')
+        self.dataCursor = None
+        
+        # Agregar display inteligente de coordenadas
+        self.add_smart_coordinate_display(self.axes)
+        
+        self.axes.set_xscale('log')
+        self.axes.set_yscale('log')
         self.axes.grid(which='both')
         self.axes.set_xlabel(f'{unit}')
         self.axes.set_ylabel('Eficiencia [dB]')
@@ -101,13 +202,17 @@ class MplCanvas(FigureCanvas):
         self.axes.legend()
         self.fig.set_constrained_layout(True)
 
-        # Data cursor para todas las líneas
-        all_lines = line1 + line2 + line3 + line4
-        self.dataCursor = mplcursors.cursor(all_lines, hover='Transient')
+        # Deshabilitar data cursor y usar display inteligente de coordenadas
+        # all_lines = line1 + line2 + line3 + line4
+        # self.dataCursor = mplcursors.cursor(all_lines, hover='Transient')
+        self.dataCursor = None
         
-        # Escalas lineales (igual que plot_efficiency)
-        self.axes.set_xscale('linear')
-        self.axes.set_yscale('linear')
+        # Agregar display inteligente de coordenadas
+        self.add_smart_coordinate_display(self.axes)
+        
+        # Escalas logarítmicas (igual que plot_efficiency)
+        self.axes.set_xscale('log')
+        self.axes.set_yscale('log')
         self.axes.grid(which='both')
         self.axes.set_xlabel(f'{unit}')
         self.axes.set_ylabel('Eficiencia [dB]')
@@ -239,11 +344,16 @@ class MplCanvas(FigureCanvas):
             for ax in axes_list:
                 ax.set_xlim(xlims_auto[0], xlims_auto[1])
 
-        # Data cursors (hover) para cada línea
-        try:
-            self.dataCursor = [mplcursors.cursor(lh, hover='Transient') for lh in line_handles]
-        except Exception:
-            self.dataCursor = None
+        # Deshabilitar data cursors y agregar display inteligente para cada eje
+        # try:
+        #     self.dataCursor = [mplcursors.cursor(lh, hover='Transient') for lh in line_handles]
+        # except Exception:
+        #     self.dataCursor = None
+        self.dataCursor = None
+        
+        # Agregar display inteligente de coordenadas para cada eje
+        for ax in axes_list:
+            self.add_smart_coordinate_display(ax)
 
         # Ajustes finales
         self.fig.set_constrained_layout(True)
