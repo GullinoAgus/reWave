@@ -91,9 +91,9 @@ class MplCanvas(FigureCanvas):
         
         # Plotear SE total y componentes con plot normal (no semilogx)
         line1 = self.axes.plot(x, SE_total, 'b-', linewidth=2, label='SE Total')
-        line2 = self.axes.plot(x, R, 'r--', linewidth=1.5, label='R (Reflection)')
-        line3 = self.axes.plot(x, A, 'g--', linewidth=1.5, label='A (Absorption)')  
-        line4 = self.axes.plot(x, M, 'm--', linewidth=1.5, label='M (Multiple Refl.)')
+        line2 = self.axes.plot(x, R, 'r--', linewidth=1.5, label='R (Reflexion)')
+        line3 = self.axes.plot(x, A, 'g--', linewidth=1.5, label='A (Absorcion)')
+        line4 = self.axes.plot(x, M, 'm--', linewidth=1.5, label='M (Refl. Multiple)')
         
         # Configuración igual que plot_efficiency
         self.axes.yaxis.set_major_locator(self.y_locator)

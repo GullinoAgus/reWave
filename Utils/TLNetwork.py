@@ -80,7 +80,7 @@ class TLineNetwork:
         m3 = self._layer_list[2]  # Medio de salida
 
         k1 = m1.k(freq)
-        kxs = self.k_x_i(freq, m2, m1)
+        ks = self.k_x_i(freq, m2, m1)
 
         Z1 = m1.Zo_from_theta_i_TM(freq, self.theta_i, k1)
         Z2 = m2.Zo_from_theta_i_TM(freq, self.theta_i, k1)
@@ -94,13 +94,11 @@ class TLineNetwork:
         
         # A: Absorption loss - ecuación (4.23b)
         # A = 20*log10(|exp(j*kx2*d)|) = -8.686 * Im(kx2) * d
-        A = np.abs(np.exp(1j * kxs * d))
+        A = np.abs(np.exp(1j * ks * d))
         
         # M: Multiple reflection correction - ecuación (4.23c) generalizada
-        # M = 20*log10(|1 - (Z1-Z2)(Z1-Z3)/[(Z1+Z2)(Z1+Z3)] * exp(-2j*kx2*d)|)
-        M = np.abs(
-            1.0 - ((Z1 - Z2)*(Z3 - Z2) / ((Z2 + Z1)*(Z2 + Z3))) * np.exp(-1j * 2.0 * kxs * d)
-        )
+        m_fac = ((Z2 - Z1) * (Z2 - Z3)) / ((Z2 + Z1) * (Z2 + Z3))
+        M = np.abs(1.0 - m_fac * np.exp(-1j * 2.0 * ks * d))
         
         return R*A*M, R, A, M
 
@@ -122,7 +120,7 @@ class TLineNetwork:
         m3 = self._layer_list[2]  # Medio de salida
 
         k1 = m1.k(freq)
-        kxs = self.k_x_i(freq, m2, m1)
+        ks = self.k_x_i(freq, m2, m1)
 
         Z1 = m1.Zo_from_theta_i_TE(freq, self.theta_i, k1)
         Z2 = m2.Zo_from_theta_i_TE(freq, self.theta_i, k1)
@@ -136,11 +134,12 @@ class TLineNetwork:
         
         # A: Absorption loss - ecuación (4.23b)
         # A = 20*log10(|exp(j*kx2*d)|) = -8.686 * Im(kx2) * d
-        A = np.abs(np.exp(1j * kxs * d))
+        A = np.abs(np.exp(1j * ks * d))
         
         # M: Multiple reflection correction - ecuación (4.23c) generalizada
         # M = 20*log10(|1 - (Z1-Z2)(Z2-Z3)/[(Z1+Z2)(Z2+Z3)] * exp(-2j*kx2*d)|)
-        M = np.abs(1.0 - ((Z1 - Z2)*(Z3 - Z2) / ((Z2 + Z1)*(Z2 + Z3))) * np.exp(-1j * 2.0 * kxs * d))
+        reflection_term = (Z1 - Z2) * (Z2 - Z3) / ((Z1 + Z2) * (Z2 + Z3))
+        M = 1 - reflection_term * np.exp(-2j * ks * d)
         
         return R*A*M, R, A, M
 
