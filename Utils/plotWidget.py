@@ -27,10 +27,11 @@ class MplCanvas(FigureCanvas):
         self.middlePatch = None
         self.wpcirclePatch = None
 
-        # Eje inicial (se reemplaza al crear layouts 2 ó 3 paneles)
+        # Eje inicial (se reemplaza al crear layouts 2, 3 ó 4 paneles)
         self.axes: Axes = self.fig.add_subplot(111)
         self.axes2 = None
         self.axes3 = None
+        self.axes4 = None
 
         super().__init__(self.fig)
         self.navToolBar = NavigationToolbar(self, parent)
@@ -168,7 +169,7 @@ class MplCanvas(FigureCanvas):
         # Agregar display inteligente de coordenadas
         self.add_smart_coordinate_display(self.axes)
         
-        self.axes.set_xscale('linear')
+        self.axes.set_xscale('log')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes.set_xlabel(f'{unit}')
@@ -185,8 +186,25 @@ class MplCanvas(FigureCanvas):
 
         self.fig.canvas.draw()
 
-    def plot_efficiency_with_components(self, x, SE_total, R, A, M, unit='Frecuencia [Hz]', ylims=None, xlims=None):
-        """Plotea SE total y sus componentes R, A, M"""
+    def plot_efficiency_with_components(self, x, SE_total, R, A, M, unit='Frecuencia [Hz]', ylims=None, xlims=None, use_quadrants=True):
+        """
+        Plotea SE total y sus componentes R, A, M
+        Si use_quadrants=True y tenemos 3 componentes (R, A, M), usa layout de 4 cuadrantes
+        En caso contrario, mantiene el comportamiento original (todo en un gráfico)
+        """
+        
+        # Determinar si usar 4 cuadrantes (cuando tenemos los 3 componentes R, A, M)
+        has_three_components = (R is not None and A is not None and M is not None)
+        
+        if use_quadrants and has_three_components:
+            # Usar layout de 4 cuadrantes
+            self._plot_efficiency_quadrants(x, SE_total, R, A, M, unit, ylims, xlims)
+        else:
+            # Comportamiento original: todo en un solo gráfico
+            self._plot_efficiency_single(x, SE_total, R, A, M, unit, ylims, xlims)
+
+    def _plot_efficiency_single(self, x, SE_total, R, A, M, unit, ylims, xlims):
+        """Plotea SE total y componentes en un solo gráfico (comportamiento original)"""
         self.axes.clear()
         self.axes.format_coord = format_coord_piola
         
@@ -203,15 +221,13 @@ class MplCanvas(FigureCanvas):
         self.fig.set_constrained_layout(True)
 
         # Deshabilitar data cursor y usar display inteligente de coordenadas
-        # all_lines = line1 + line2 + line3 + line4
-        # self.dataCursor = mplcursors.cursor(all_lines, hover='Transient')
         self.dataCursor = None
         
         # Agregar display inteligente de coordenadas
         self.add_smart_coordinate_display(self.axes)
         
         # Escalas logarítmicas (igual que plot_efficiency)
-        self.axes.set_xscale('linear')
+        self.axes.set_xscale('log')
         self.axes.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes.set_xlabel(f'{unit}')
@@ -229,19 +245,108 @@ class MplCanvas(FigureCanvas):
 
         self.fig.canvas.draw()
 
+    def _plot_efficiency_quadrants(self, x, SE_total, R, A, M, unit, ylims, xlims):
+        """Plotea SE y componentes R, A, M en 4 cuadrantes separados"""
+        # Inicializar layout de 4 cuadrantes
+        self.init_plot_layout(4)
+        
+        # Lista de ejes y datos para cada cuadrante
+        axes_list = [self.axes, self.axes2, self.axes3, self.axes4]
+        data_list = [R, A, M, None]  # None para el cuadrante combinado
+        labels = ['R (Reflexión)', 'A (Absorción)', 'M (Refl. Múltiple)', 'Combinado']
+        colors = ['r-', 'g-', 'm-', None]  # None para el cuadrante combinado
+        
+        # Limpiar todos los ejes
+        for ax in axes_list:
+            ax.clear()
+            ax.format_coord = format_coord_piola
+        
+        # Plotear cada componente en su cuadrante
+        for i, (ax, data, label, color) in enumerate(zip(axes_list[:3], data_list[:3], labels[:3], colors[:3])):
+            # Plotear el componente individual
+            ax.plot(x, data, color, linewidth=2, label=label)
+            
+            # Configuración básica
+            ax.yaxis.set_major_locator(self.y_locator)
+            ax.yaxis.set_major_formatter(self.y_formater)
+            ax.set_xscale('log')
+            ax.set_yscale('linear')
+            ax.grid(which='both')
+            ax.set_title(label, fontsize=self.title_size)
+            ax.set_ylabel('Eficiencia [dB]')
+            
+            # Agregar display inteligente de coordenadas
+            self.add_smart_coordinate_display(ax)
+        
+        # Cuadrante combinado (inferior derecho)
+        ax_combined = self.axes4
+        ax_combined.plot(x, SE_total, 'b-', linewidth=2, label='SE Total')
+        ax_combined.plot(x, R, 'r--', linewidth=1.5, label='R')
+        ax_combined.plot(x, A, 'g--', linewidth=1.5, label='A') 
+        ax_combined.plot(x, M, 'm--', linewidth=1.5, label='M')
+        
+        # Configuración del cuadrante combinado
+        ax_combined.yaxis.set_major_locator(self.y_locator)
+        ax_combined.yaxis.set_major_formatter(self.y_formater)
+        ax_combined.set_xscale('log')
+        ax_combined.set_yscale('linear')
+        ax_combined.grid(which='both')
+        ax_combined.set_title('Combinado', fontsize=self.title_size)
+        ax_combined.set_ylabel('Eficiencia [dB]')
+        ax_combined.legend(fontsize=8)
+        
+        # Agregar display inteligente de coordenadas
+        self.add_smart_coordinate_display(ax_combined)
+        
+        # Etiquetas de X solo en los cuadrantes inferiores
+        self.axes3.set_xlabel(f'{unit}')
+        self.axes4.set_xlabel(f'{unit}')
+        
+        # Aplicar límites a todos los ejes
+        for ax in axes_list:
+            if hasattr(ylims, '__iter__'):
+                ax.set_ylim(ylims[0], ylims[1])
+            
+            if hasattr(xlims, '__iter__'):
+                ax.set_xlim(xlims[0], xlims[1])
+            else:
+                xlims_auto = ax.get_xlim()
+                ax.set_xlim(xlims_auto[0], xlims_auto[1])
+        
+        # Deshabilitar data cursor
+        self.dataCursor = None
+        
+        # Ajustes finales
+        self.fig.set_constrained_layout(True)
+        self.fig.canvas.draw()
+
     def init_plot_layout(self, n_plots: int):
         """
         Crea la disposición de ejes según n_plots:
+          - 4: 2x2 cuadrantes para R, A, M y combinado
           - 3: izquierda (2 filas: R y T) + derecha (A) ocupando toda la altura
           - 2: 1 columna, 2 filas (arriba y abajo, mitad y mitad)
         """
-        if n_plots not in (2, 3):
-            raise ValueError("n_plots debe ser 2 o 3.")
+        if n_plots not in (2, 3, 4):
+            raise ValueError("n_plots debe ser 2, 3 o 4.")
 
         # Limpiar figura y armar grilla
         self.fig.clear()
 
-        if n_plots == 3:
+        if n_plots == 4:
+            # Layout 2x2 para los 4 cuadrantes (R, A, M, Combinado)
+            gs = self.fig.add_gridspec(
+                nrows=2, ncols=2,
+                width_ratios=[1, 1],
+                height_ratios=[1, 1],
+                wspace=0.15, hspace=0.15
+            )
+            self.axes  = self.fig.add_subplot(gs[0, 0])  # cuadrante superior izquierdo
+            self.axes2 = self.fig.add_subplot(gs[0, 1], sharex=self.axes)  # cuadrante superior derecho
+            self.axes3 = self.fig.add_subplot(gs[1, 0], sharex=self.axes)  # cuadrante inferior izquierdo
+            self.axes4 = self.fig.add_subplot(gs[1, 1], sharex=self.axes)  # cuadrante inferior derecho
+            axes_list = [self.axes, self.axes2, self.axes3, self.axes4]
+        elif n_plots == 3:
             gs = self.fig.add_gridspec(
                 nrows=2, ncols=2,
                 width_ratios=[1.0, 1.15],   # un poco más ancho el panel derecho
@@ -251,6 +356,7 @@ class MplCanvas(FigureCanvas):
             self.axes  = self.fig.add_subplot(gs[0, 0])                 # panel 1 (arriba-izq)
             self.axes2 = self.fig.add_subplot(gs[1, 0], sharex=self.axes)  # panel 2 (abajo-izq)
             self.axes3 = self.fig.add_subplot(gs[:, 1], sharex=self.axes)  # panel 3 (derecha)
+            self.axes4 = None
             axes_list = [self.axes, self.axes2, self.axes3]
         else:  # n_plots == 2
             gs = self.fig.add_gridspec(
@@ -261,6 +367,7 @@ class MplCanvas(FigureCanvas):
             self.axes  = self.fig.add_subplot(gs[0, 0])  # arriba
             self.axes2 = self.fig.add_subplot(gs[1, 0], sharex=self.axes)  # abajo
             self.axes3 = None
+            self.axes4 = None
             axes_list = [self.axes, self.axes2]
 
         # Formateadores base y coord formatter

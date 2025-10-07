@@ -211,9 +211,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 R.append(sanitize_values(ref[-1] ** 2))
                 A.append(sanitize_values(1 - R[-1] - T[-1]))
                 EA.append(sanitize_values(20 * np.log10(np.abs(se_total))))
-                R_se.append(20 * np.log10(np.abs(R_val) if R_val is not None else None))
-                A_se.append(20 * np.log10(np.abs(A_val) if A_val is not None else None))
-                M_se.append(20 * np.log10(np.abs(M_val) if M_val is not None else None))
+                R_se.append(20 * np.log10(np.abs(R_val)) if R_val is not None else None)
+                A_se.append(20 * np.log10(np.abs(A_val)) if A_val is not None else None)
+                M_se.append(20 * np.log10(np.abs(M_val)) if M_val is not None else None)
         else:  # Barrido de frecuencia
             net = TLineNetwork(layers, self.theta_i)
             for freq in x:
@@ -247,9 +247,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 R.append(sanitize_values(ref[-1] ** 2))
                 A.append(sanitize_values(1 - R[-1] - T[-1]))
                 EA.append(sanitize_values(20 * np.log10(np.abs(se_total))))
-                R_se.append(20 * np.log10(np.abs(R_val) if R_val is not None else None))
-                A_se.append(20 * np.log10(np.abs(A_val) if A_val is not None else None))
-                M_se.append(20 * np.log10(np.abs(M_val) if M_val is not None else None))
+                R_se.append(20 * np.log10(np.abs(R_val)) if R_val is not None else None)
+                A_se.append(20 * np.log10(np.abs(A_val)) if A_val is not None else None)
+                M_se.append(20 * np.log10(np.abs(M_val)) if M_val is not None else None)
 
         self.coef_1_plot.plot_for_freq(
             x, [ref, trans],
