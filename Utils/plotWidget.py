@@ -265,7 +265,7 @@ class MplCanvas(FigureCanvas):
         # Lista de ejes y datos para cada cuadrante
         axes_list = [self.axes, self.axes2, self.axes3, self.axes4]
         data_list = [R, A, M, None]  # None para el cuadrante combinado
-        labels = ['R (Reflexión)', 'A (Absorción)', 'M (Refl. Múltiple)', 'Combinado']
+        labels = ['R (Reflexión)', 'A (Absorción)', 'M (Refl. Múltiple)', 'SE']
         colors = ['r-', 'g-', 'm-', None]  # None para el cuadrante combinado
         
         # Limpiar todos los ejes
@@ -303,7 +303,7 @@ class MplCanvas(FigureCanvas):
         ax_combined.set_xscale('log')
         ax_combined.set_yscale('linear')
         ax_combined.grid(which='both')
-        ax_combined.set_title('Combinado', fontsize=self.title_size)
+        ax_combined.set_title('SE', fontsize=self.title_size)
         ax_combined.set_ylabel('Eficiencia [dB]')
         ax_combined.legend(fontsize=8)
         
@@ -335,7 +335,7 @@ class MplCanvas(FigureCanvas):
     def init_plot_layout(self, n_plots: int):
         """
         Crea la disposición de ejes según n_plots:
-          - 4: 2x2 cuadrantes para R, A, M y combinado
+          - 4: 2x2 cuadrantes para R, A, M y SE
           - 3: izquierda (2 filas: R y T) + derecha (A) ocupando toda la altura
           - 2: 1 columna, 2 filas (arriba y abajo, mitad y mitad)
         """
@@ -346,7 +346,7 @@ class MplCanvas(FigureCanvas):
         self.fig.clear()
 
         if n_plots == 4:
-            # Layout 2x2 para los 4 cuadrantes (R, A, M, Combinado)
+            # Layout 2x2 para los 4 cuadrantes (R, A, M, SE)
             gs = self.fig.add_gridspec(
                 nrows=2, ncols=2,
                 width_ratios=[1, 1],

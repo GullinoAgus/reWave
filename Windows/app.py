@@ -162,6 +162,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Calculo de la eficiencia de apantallamiento o de
         los coeficientes en funcion de si es barrido de angulo o frecuencia
         """
+        # Validar que frecuencia mínima sea menor que frecuencia máxima (solo para barrido de frecuencia)
+        if not self.freq_sweep_check.isChecked():
+            if self.min_freq >= self.max_freq:
+                QtWidgets.QMessageBox.warning(
+                    self, 
+                    "Error de Frecuencias",
+                    f"La frecuencia mínima ({self.min_freq:.2e} Hz) debe ser menor que la frecuencia máxima ({self.max_freq:.2e} Hz).\n\n"
+                    "Por favor, corrija los valores de frecuencia antes de continuar."
+                )
+                return
+        
         trans, ref, T, R, A, EA, R_se, A_se, M_se = [], [], [], [], [], [], [], [], []
 
         # Se construye la lista de medios a partir de los widgets de capas
