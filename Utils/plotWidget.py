@@ -168,8 +168,8 @@ class MplCanvas(FigureCanvas):
         # Agregar display inteligente de coordenadas
         self.add_smart_coordinate_display(self.axes)
         
-        self.axes.set_xscale('log')
-        self.axes.set_yscale('log')
+        self.axes.set_xscale('linear')
+        self.axes.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes.set_xlabel(f'{unit}')
         self.axes.set_ylabel('Eficiencia [dB]')
@@ -211,8 +211,8 @@ class MplCanvas(FigureCanvas):
         self.add_smart_coordinate_display(self.axes)
         
         # Escalas logarítmicas (igual que plot_efficiency)
-        self.axes.set_xscale('log')
-        self.axes.set_yscale('log')
+        self.axes.set_xscale('linear')
+        self.axes.set_yscale('linear')
         self.axes.grid(which='both')
         self.axes.set_xlabel(f'{unit}')
         self.axes.set_ylabel('Eficiencia [dB]')

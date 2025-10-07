@@ -138,8 +138,8 @@ class TLineNetwork:
         
         # M: Multiple reflection correction - ecuación (4.23c) generalizada
         # M = 20*log10(|1 - (Z1-Z2)(Z2-Z3)/[(Z1+Z2)(Z2+Z3)] * exp(-2j*kx2*d)|)
-        reflection_term = (Z1 - Z2) * (Z2 - Z3) / ((Z1 + Z2) * (Z2 + Z3))
-        M = 1 - reflection_term * np.exp(-2j * ks * d)
+        m_fac = ((Z2 - Z1) * (Z2 - Z3)) / ((Z2 + Z1) * (Z2 + Z3))
+        M = np.abs(1.0 - m_fac * np.exp(-1j * 2.0 * ks * d))
         
         return R*A*M, R, A, M
 
