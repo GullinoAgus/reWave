@@ -153,7 +153,19 @@ class MplCanvas(FigureCanvas):
         self.fig.canvas.draw_idle()
 
     def plot_efficiency(self, x, EA, unit: str, ylims=None, xlims=None):
-        self.axes.clear()
+        # Reinicializar la figura si hay múltiples ejes activos
+        if self.axes2 is not None or self.axes3 is not None or self.axes4 is not None:
+            self.fig.clear()
+            self.axes = self.fig.add_subplot(111)
+            self.axes2 = None
+            self.axes3 = None
+            self.axes4 = None
+            # Recrear cursor simple
+            self.cursor = Cursor(self.axes, useblit=True,
+                                color='gray', linestyle='--', linewidth=0.8)
+        else:
+            self.axes.clear()
+        
         self.axes.format_coord = format_coord_piola
 
         line1 = self.axes.plot(x, EA, label="Eficiencia de apantallamiento")

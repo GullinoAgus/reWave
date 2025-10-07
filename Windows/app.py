@@ -272,11 +272,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Verificar si tenemos componentes R, A, M válidos para plotear
         has_components = (R_se[0] is not None and A_se[0] is not None and M_se[0] is not None)
         
-        if has_components:
-            # Plotear SE total y componentes separados
+        # Para single shield (1 capa) mostrar componentes, para multiple shields (>1 capa) solo SE total
+        if len(layers) == 3 and has_components:
+            # Single shield: plotear SE total y componentes separados
             self.apant_plot.plot_efficiency_with_components(x, EA, R_se, A_se, M_se, unit=unit)
         else:
-            # Solo plotear SE total
+            # Multiple shields o sin componentes: solo plotear SE total
             self.apant_plot.plot_efficiency(x, EA, unit=unit)
 
         self.plots.setCurrentIndex(0)
