@@ -8,7 +8,7 @@ AppId={{E98BEEA3-A0CD-4012-8F34-8D8364C19EEA}
 AppName=reWave
 AppVersion=1.0
 ;AppVerName=reWave 1.0
-AppPublisher=Agustin Gullino
+AppPublisher=Gonzalo Linares y Agustin Gullino 
 DefaultDirName={autopf}\reWave
 ; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
 ; on anything but x64 and Windows 11 on Arm.
